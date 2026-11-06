@@ -19,7 +19,7 @@ import {
 import { apagarLembrete, obterLembrete, salvarLembrete } from '@/lib/banco';
 import { agendarLembrete, cancelarLembrete, pedirPermissao } from '@/lib/notificacoes';
 import { espaco } from '@/tema/tokens';
-import { useTema } from '@/tema/useTema';
+import { useSecao, useTema } from '@/tema/useTema';
 
 const FREQUENCIAS: { valor: Frequencia; titulo: string }[] = [
   { valor: 'diaria', titulo: 'Todo dia' },
@@ -29,6 +29,7 @@ const FREQUENCIAS: { valor: Frequencia; titulo: string }[] = [
 
 export default function FormLembrete() {
   const { cor } = useTema();
+  const s = useSecao('agenda');
   const { discreto } = useSessao();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const editando = id ? Number(id) : null;
@@ -126,7 +127,7 @@ export default function FormLembrete() {
   const previa = montar();
 
   return (
-    <TelaDetalhe>
+    <TelaDetalhe secao="agenda">
       <Texto v="titulo">{editando ? 'Editar lembrete' : 'Novo lembrete'}</Texto>
       <Campo
         rotulo="Nome do lembrete"
@@ -206,7 +207,7 @@ export default function FormLembrete() {
           accessibilityLabel="Avisar no horário"
           value={ativo}
           onValueChange={setAtivo}
-          trackColor={{ true: cor.acao, false: cor.linha }}
+          trackColor={{ true: s.acao, false: cor.linha }}
           thumbColor={cor.superficie}
         />
       </View>

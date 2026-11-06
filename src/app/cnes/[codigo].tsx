@@ -24,7 +24,7 @@ export default function DetalheCnes() {
   }
 
   return (
-    <TelaDetalhe>
+    <TelaDetalhe secao="saude">
       {r.doCacheDesde ? <AvisoCache desde={haQuanto(r.doCacheDesde, new Date())} onTentar={r.recarregar} /> : null}
       {r.carregando && !e ? (
         <Carregando />
@@ -37,7 +37,7 @@ export default function DetalheCnes() {
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s }}>
               {e.atende_sus ? <Selo tom="ok" texto="Atende pelo SUS" /> : null}
               {e.habilitacoes.map((h) => (
-                <Selo key={h} tom="azul" texto={HABILITACOES[h as CodigoHabilitacao] ?? h} />
+                <Selo key={h} tom="secao" texto={HABILITACOES[h as CodigoHabilitacao] ?? h} />
               ))}
             </View>
           </View>

@@ -91,7 +91,7 @@ export default function FormConsulta() {
   }
 
   return (
-    <TelaDetalhe>
+    <TelaDetalhe secao="agenda">
       <Texto v="titulo">{editando ? 'Editar consulta' : 'Nova consulta'}</Texto>
       <Campo rotulo="Que consulta é" placeholder="Ex.: endocrinologista" value={titulo} onChangeText={setTitulo} maxLength={60} />
       <Campo rotulo="Onde (opcional)" placeholder="Ex.: UBS República" value={local} onChangeText={setLocal} maxLength={120} />

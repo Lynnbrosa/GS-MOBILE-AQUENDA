@@ -17,7 +17,7 @@ export default function DetalheRoda() {
   const agora = new Date();
 
   return (
-    <TelaDetalhe>
+    <TelaDetalhe secao="rodas">
       {r.doCacheDesde ? <AvisoCache desde={haQuanto(r.doCacheDesde, agora)} onTentar={r.recarregar} /> : null}
       {r.carregando && !roda ? (
         <Carregando />
@@ -28,7 +28,7 @@ export default function DetalheRoda() {
           <View style={{ gap: espaco.s }}>
             <Texto v="titulo">{roda.titulo}</Texto>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s }}>
-              <Selo tom="azul" texto={roda.presencial ? 'Presencial' : 'Online'} />
+              <Selo tom="secao" texto={roda.presencial ? 'Presencial' : 'Online'} />
               <Selo texto={roda.idadeMinima > 0 ? `A partir de ${roda.idadeMinima} anos` : 'Livre'} />
               {roda.exemplo ? <Selo tom="aviso" texto="Exemplo" /> : null}
             </View>

@@ -24,7 +24,7 @@ export default function DetalheVaga() {
   const agora = new Date();
 
   return (
-    <TelaDetalhe>
+    <TelaDetalhe secao="vagas">
       {r.doCacheDesde ? <AvisoCache desde={haQuanto(r.doCacheDesde, agora)} onTentar={r.recarregar} /> : null}
       {r.carregando && !v ? (
         <Carregando />
@@ -36,7 +36,7 @@ export default function DetalheVaga() {
             <Texto v="titulo">{v.titulo}</Texto>
             <Texto suave>{v.empresa}</Texto>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s }}>
-              {v.afirmativa ? <Selo tom="azul" icone="heart-outline" texto="Afirmativa" /> : null}
+              {v.afirmativa ? <Selo tom="secao" icone="heart-outline" texto="Afirmativa" /> : null}
               <Selo texto={MODALIDADES[v.modalidade]} />
               {v.exemplo ? <Selo tom="aviso" texto="Exemplo" /> : null}
             </View>

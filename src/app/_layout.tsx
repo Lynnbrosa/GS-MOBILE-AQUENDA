@@ -1,4 +1,5 @@
 import { AtkinsonHyperlegible_400Regular, AtkinsonHyperlegible_700Bold, useFonts } from '@expo-google-fonts/atkinson-hyperlegible';
+import { Fredoka_600SemiBold } from '@expo-google-fonts/fredoka';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import { router, Stack, usePathname } from 'expo-router';
@@ -57,7 +58,7 @@ function Navegacao() {
         screenOptions={{
           headerStyle: { backgroundColor: cor.papel },
           headerTintColor: cor.tinta,
-          headerTitleStyle: { fontFamily: fontes.forte },
+          headerTitleStyle: { fontFamily: fontes.titulo },
           headerShadowVisible: false,
           contentStyle: { backgroundColor: cor.papel },
           headerBackButtonDisplayMode: 'minimal',
@@ -69,6 +70,8 @@ function Navegacao() {
         <Stack.Screen name="vaga/[id]" options={{ title: 'Vaga' }} />
         <Stack.Screen name="cnes/[codigo]" options={{ title: 'Unidade do SUS' }} />
         <Stack.Screen name="roda/[id]" options={{ title: 'Roda de conversa' }} />
+        <Stack.Screen name="sala/[id]" options={{ title: 'Sala' }} />
+        <Stack.Screen name="salas/entrar" options={{ title: '', presentation: 'modal' }} />
         <Stack.Screen name="agenda/lembrete" options={{ title: 'Lembrete', presentation: 'modal' }} />
         <Stack.Screen name="agenda/consulta" options={{ title: 'Consulta', presentation: 'modal' }} />
         <Stack.Screen name="ajustes" options={{ title: 'Ajustes' }} />
@@ -83,7 +86,7 @@ function Navegacao() {
 }
 
 export default function RootLayout() {
-  const [fontesProntas, erroFontes] = useFonts({ AtkinsonHyperlegible_400Regular, AtkinsonHyperlegible_700Bold });
+  const [fontesProntas, erroFontes] = useFonts({ AtkinsonHyperlegible_400Regular, AtkinsonHyperlegible_700Bold, Fredoka_600SemiBold });
   const [urlsProntas, setUrlsProntas] = useState(false);
 
   useEffect(() => {

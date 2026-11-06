@@ -57,6 +57,13 @@ const MIGRACOES: string[] = [
     salvo_em TEXT NOT NULL
   );
   `,
+  // 2: quem você bloqueou nas salas (fica só neste celular; a outra pessoa não fica sabendo)
+  `
+  CREATE TABLE IF NOT EXISTS bloqueados (
+    apelido TEXT PRIMARY KEY NOT NULL COLLATE NOCASE,
+    bloqueado_em TEXT NOT NULL
+  );
+  `,
 ];
 
 async function migrar(db: SQLite.SQLiteDatabase): Promise<void> {
@@ -288,6 +295,24 @@ export async function alternarFavorito(f: Favorito): Promise<boolean> {
   return true;
 }
 
+// ---------- bloqueios nas salas ----------
+
+export async function listarBloqueados(): Promise<string[]> {
+  const db = await banco();
+  const linhas = await db.getAllAsync<{ apelido: string }>('SELECT apelido FROM bloqueados ORDER BY bloqueado_em DESC');
+  return linhas.map((l) => l.apelido);
+}
+
+export async function bloquear(apelido: string): Promise<void> {
+  const db = await banco();
+  await db.runAsync('INSERT INTO bloqueados (apelido, bloqueado_em) VALUES (?, ?) ON CONFLICT(apelido) DO NOTHING', apelido.trim(), new Date().toISOString());
+}
+
+export async function desbloquear(apelido: string): Promise<void> {
+  const db = await banco();
+  await db.runAsync('DELETE FROM bloqueados WHERE apelido = ?', apelido);
+}
+
 // ---------- apagar tudo ----------
 
 /** "Apagar meus dados": some com agenda, consultas, favoritos, cache e preferências. */
@@ -295,7 +320,7 @@ export async function apagarTudo(): Promise<void> {
   const db = await banco();
   await db.withExclusiveTransactionAsync(async (tx) => {
     await tx.execAsync(
-      'DELETE FROM registros; DELETE FROM lembretes; DELETE FROM consultas; DELETE FROM favoritos; DELETE FROM cache_api; DELETE FROM preferencias;',
+      'DELETE FROM registros; DELETE FROM lembretes; DELETE FROM consultas; DELETE FROM favoritos; DELETE FROM bloqueados; DELETE FROM cache_api; DELETE FROM preferencias;',
     );
   });
 }

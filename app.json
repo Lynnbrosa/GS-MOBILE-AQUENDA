@@ -7,16 +7,23 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "backgroundColor": "#F4F2F7",
-    "ios": { "supportsTablet": false, "bundleIdentifier": "br.fiap.aquenda" },
+    "backgroundColor": "#FFFFFF",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "br.fiap.aquenda"
+    },
     "android": {
       "package": "br.fiap.aquenda",
       "adaptiveIcon": {
-        "backgroundColor": "#22172B",
+        "backgroundColor": "#FFE7D4",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "permissions": ["android.permission.POST_NOTIFICATIONS", "android.permission.SCHEDULE_EXACT_ALARM", "android.permission.ACCESS_COARSE_LOCATION"],
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "plugins": [
@@ -24,13 +31,51 @@
       "expo-sqlite",
       "expo-secure-store",
       "expo-font",
-      ["expo-splash-screen", { "image": "./assets/splash-icon.png", "imageWidth": 160, "backgroundColor": "#F4F2F7" }],
-      ["expo-notifications", { "defaultChannel": "agenda" }],
-      ["expo-location", { "locationWhenInUsePermission": "O Aquenda usa sua posição só para mostrar o que está perto. Ela não é guardada." }],
-      ["expo-build-properties", { "android": { "usesCleartextTraffic": true } }],
-      ["expo-alternate-app-icons", [{ "name": "Clima", "ios": "./assets/icon-clima.png", "android": { "foregroundImage": "./assets/icon-clima-foreground.png", "backgroundColor": "#5AA9E6" } }]],
-      "./plugins/with-rotulo-discreto.js"
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "backgroundColor": "#FFE7D4"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "defaultChannel": "agenda"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O Aquenda usa sua posição só para mostrar o que está perto. Ela não é guardada."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
+      "./plugins/with-rotulo-discreto.js",
+      [
+        "expo-alternate-app-icons",
+        [
+          {
+            "name": "Clima",
+            "ios": "./assets/icon-clima.png",
+            "android": {
+              "foregroundImage": "./assets/icon-clima-foreground.png",
+              "backgroundColor": "#5AA9E6"
+            }
+          }
+        ]
+      ]
     ],
-    "experiments": { "typedRoutes": true }
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }

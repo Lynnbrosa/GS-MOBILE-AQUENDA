@@ -45,3 +45,6 @@ yarn-error.*
 
 # coverage
 coverage/
+
+# apk gerado localmente
+dist-apk/

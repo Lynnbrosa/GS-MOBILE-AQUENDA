@@ -153,3 +153,28 @@ export type EstabelecimentosDoMunicipio = {
   total: number;
   itens: Estabelecimento[];
 };
+
+// ---------- Salas de conversa (API C#, /api/chat + SignalR em /hubs/chat) ----------
+
+export type Sala = {
+  id: number;
+  slug: string;
+  nome: string;
+  descricao: string;
+  moderadaPor: string;
+  aberta: boolean;
+  mensagensUltimas24h: number;
+};
+
+/** A API não manda id de quem escreveu: só o apelido. */
+export type Mensagem = {
+  id: number;
+  salaId: number;
+  apelido: string;
+  texto: string;
+  enviadaEm: string;
+};
+
+export type Entrada = { participanteId: number; apelido: string; token: string; regras: string[] };
+
+export type ResultadoDenuncia = { mensagemId: number; denuncias: number; oculta: boolean };

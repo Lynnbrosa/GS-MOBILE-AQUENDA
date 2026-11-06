@@ -47,13 +47,14 @@ async function lerProblema(resp: Response): Promise<string> {
 }
 
 export type OpcoesPedido = {
-  metodo?: 'GET' | 'POST';
+  metodo?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   corpo?: unknown;
+  cabecalhos?: Record<string, string>;
   tempoLimiteMs?: number;
 };
 
 export async function pedirJson<T>(url: string, opcoes: OpcoesPedido = {}): Promise<T> {
-  const { metodo = 'GET', corpo, tempoLimiteMs = 8000 } = opcoes;
+  const { metodo = 'GET', corpo, cabecalhos = {}, tempoLimiteMs = 8000 } = opcoes;
   const controle = new AbortController();
   let estourou = false;
   const timer = setTimeout(() => {
@@ -65,7 +66,7 @@ export async function pedirJson<T>(url: string, opcoes: OpcoesPedido = {}): Prom
   try {
     resp = await fetch(url, {
       method: metodo,
-      headers: corpo !== undefined ? { 'Content-Type': 'application/json', Accept: 'application/json' } : { Accept: 'application/json' },
+      headers: { Accept: 'application/json', ...(corpo !== undefined ? { 'Content-Type': 'application/json' } : {}), ...cabecalhos },
       body: corpo !== undefined ? JSON.stringify(corpo) : undefined,
       signal: controle.signal,
     });

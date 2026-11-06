@@ -1,20 +1,22 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Alert, Switch, View } from 'react-native';
 import { Botao, Campo, Cartao, Secao, Texto } from '@/componentes/base';
 import { TecladoPin } from '@/componentes/TecladoPin';
 import { TelaDetalhe } from '@/componentes/Tela';
 import { useSessao } from '@/estado/Sessao';
-import { apagarTudo, gravarPreferencia } from '@/lib/banco';
+import { apagarTudo, desbloquear, gravarPreferencia, listarBloqueados } from '@/lib/banco';
 import { definirUrlPersonalizada, urlBase, urlPadraoAtual, urlValida, type NomeApi } from '@/lib/config';
 import { definirPin, removerPin, trocaIconeDisponivel } from '@/lib/discreto';
 import { cancelarTodas } from '@/lib/notificacoes';
+import { lerParticipante, sairDasSalas, type EuNasSalas } from '@/lib/participante';
 import { PIN_MIN, validarPin } from '@/lib/pin';
 import { espaco } from '@/tema/tokens';
-import { useTema } from '@/tema/useTema';
+import { useSecao, useTema } from '@/tema/useTema';
 
 function LinhaInterruptor({ titulo, texto, valor, onMudar }: { titulo: string; texto: string; valor: boolean; onMudar: (v: boolean) => void }) {
   const { cor } = useTema();
+  const s = useSecao();
   return (
     <View style={{ flexDirection: 'row', gap: espaco.m, alignItems: 'center' }}>
       <View style={{ flex: 1, gap: 2 }}>
@@ -28,7 +30,7 @@ function LinhaInterruptor({ titulo, texto, valor, onMudar }: { titulo: string; t
         accessibilityHint={texto}
         value={valor}
         onValueChange={onMudar}
-        trackColor={{ true: cor.acao, false: cor.linha }}
+        trackColor={{ true: s.acao, false: cor.linha }}
         thumbColor={cor.superficie}
       />
     </View>
@@ -78,6 +80,36 @@ function CriarPin({ onPronto, onCancelar }: { onPronto: () => void; onCancelar: 
         <Botao titulo="Continuar" onPress={continuar} desativado={pin.length < PIN_MIN} style={{ flex: 1 }} />
       </View>
     </Cartao>
+  );
+}
+
+function Salas() {
+  const [eu, setEu] = useState<EuNasSalas | null>(null);
+  const [bloqueados, setBloqueados] = useState<string[]>([]);
+  const carregar = useCallback(() => {
+    lerParticipante().then(setEu).catch(() => setEu(null));
+    listarBloqueados().then(setBloqueados).catch(() => setBloqueados([]));
+  }, []);
+  useFocusEffect(carregar);
+
+  function sair() {
+    Alert.alert('Sair das salas?', 'Este celular esquece seu apelido. Suas mensagens somem do servidor em até 7 dias.', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Sair', style: 'destructive', onPress: async () => { await sairDasSalas(); carregar(); } },
+    ]);
+  }
+
+  return (
+    <Secao titulo="Salas de conversa">
+      <Texto>{eu ? `Você entra como ${eu.apelido}.` : 'Você ainda não entrou em nenhuma sala.'}</Texto>
+      {bloqueados.map((b) => (
+        <View key={b} style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Texto style={{ flex: 1 }}>{b} (bloqueade)</Texto>
+          <Botao titulo="Desbloquear" tipo="discreto" onPress={async () => { await desbloquear(b); carregar(); }} />
+        </View>
+      ))}
+      {eu ? <Botao titulo="Sair das salas" tipo="secundario" icone="log-out-outline" onPress={sair} /> : null}
+    </Secao>
   );
 }
 
@@ -169,6 +201,7 @@ export default function Ajustes() {
           style: 'destructive',
           onPress: async () => {
             await cancelarTodas();
+            await sairDasSalas();
             await apagarTudo();
             await removerPin();
             await atualizarPin();
@@ -213,6 +246,8 @@ export default function Ajustes() {
           O botão Sair, no topo de todas as abas, troca na hora para a tela de clima.
         </Texto>
       </Secao>
+
+      <Salas />
 
       <Enderecos />
 

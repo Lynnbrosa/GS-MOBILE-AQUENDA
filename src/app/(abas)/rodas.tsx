@@ -1,72 +1,90 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { View } from 'react-native';
-import { AvisoCache, Carregando, Cartao, Chip, ErroSemCache, LinhaDeChips, Selo, SemNada, Texto } from '@/componentes/base';
+import { AvisoCache, Carregando, ErroSemCache, Linha, Secao, Selo, SemNada, Texto } from '@/componentes/base';
 import { Tela } from '@/componentes/Tela';
 import { useRecurso } from '@/estado/useRecurso';
+import { apiChat } from '@/lib/api/chat';
 import { apiCsharp } from '@/lib/api/csharp';
-import type { Roda } from '@/lib/api/tipos';
-import { dataHoraCurta, haQuanto, quandoFuturo } from '@/lib/formato';
-import { espaco } from '@/tema/tokens';
+import type { Roda, Sala } from '@/lib/api/tipos';
+import { haQuanto, quandoFuturo } from '@/lib/formato';
+import { lerParticipante, type EuNasSalas } from '@/lib/participante';
 
-export default function Rodas() {
-  const [presencial, setPresencial] = useState<boolean | undefined>(undefined);
-  const r = useRecurso<Roda[]>(`rodas:${presencial ?? 'todas'}`, () => apiCsharp.rodas({ presencial }));
+export default function Conversa() {
+  const salas = useRecurso<Sala[]>('salas', () => apiChat.salas());
+  const rodas = useRecurso<Roda[]>('rodas:todas', () => apiCsharp.rodas({}));
+  const [eu, setEu] = useState<EuNasSalas | null>(null);
   const agora = new Date();
+  const recarregarSalas = salas.recarregar;
+
+  useFocusEffect(
+    useCallback(() => {
+      lerParticipante().then(setEu).catch(() => setEu(null));
+      recarregarSalas();
+    }, [recarregarSalas]),
+  );
+
+  function abrir(s: Sala) {
+    if (eu) router.push({ pathname: '/sala/[id]', params: { id: String(s.id), nome: s.nome } });
+    else router.push({ pathname: '/salas/entrar', params: { sala: String(s.id), nome: s.nome } });
+  }
 
   return (
     <Tela
-      titulo="Rodas de conversa"
-      apoio="Encontros dos Centros de Referência e grupos que ONGs parceiras já moderam. Aqui não tem chat: você vai ao encontro ou entra no grupo da ONG."
-      recarregando={r.carregando && !!r.dados}
-      onRecarregar={r.recarregar}
+      secao="rodas"
+      titulo="Conversa"
+      apoio={eu ? `Você entra como ${eu.apelido}.` : 'Salas 18+ com moderação. Só apelido.'}
+      recarregando={salas.carregando && !!salas.dados}
+      onRecarregar={() => {
+        salas.recarregar();
+        rodas.recarregar();
+      }}
     >
-      <LinhaDeChips>
-        <Chip titulo="Todas" ativo={presencial === undefined} onPress={() => setPresencial(undefined)} />
-        <Chip titulo="Presenciais" icone="location-outline" ativo={presencial === true} onPress={() => setPresencial(true)} />
-        <Chip titulo="Online" icone="chatbubbles-outline" ativo={presencial === false} onPress={() => setPresencial(false)} />
-      </LinhaDeChips>
+      <Secao titulo="Salas">
+        {salas.doCacheDesde ? <AvisoCache desde={haQuanto(salas.doCacheDesde, agora)} onTentar={salas.recarregar} /> : null}
+        {salas.carregando && !salas.dados ? (
+          <Carregando />
+        ) : salas.erro ? (
+          <ErroSemCache erro={salas.erro} indisponivel={salas.indisponivel} onTentar={salas.recarregar} />
+        ) : (
+          <View>
+            {(salas.dados ?? []).map((s) => (
+              <Linha
+                key={s.id}
+                titulo={s.nome}
+                apoio={s.descricao}
+                rotulo={`Sala ${s.nome}. ${s.descricao}. ${s.aberta ? `${s.mensagensUltimas24h} mensagens nas últimas 24 horas` : 'Fechada agora'}.`}
+                dica={eu ? 'Abre a conversa' : 'Escolha um apelido para entrar'}
+                onPress={() => (s.aberta ? abrir(s) : undefined)}
+                selo={!s.aberta ? <Selo texto="Fechada agora" /> : s.mensagensUltimas24h > 0 ? <Selo tom="secao" texto={s.mensagensUltimas24h === 1 ? '1 mensagem hoje' : `${s.mensagensUltimas24h} hoje`} /> : null}
+              />
+            ))}
+          </View>
+        )}
+      </Secao>
 
-      {r.doCacheDesde ? <AvisoCache desde={haQuanto(r.doCacheDesde, agora)} onTentar={r.recarregar} /> : null}
-
-      {r.carregando && !r.dados ? (
-        <Carregando texto="Buscando a agenda de rodas…" />
-      ) : r.erro ? (
-        <ErroSemCache erro={r.erro} indisponivel={r.indisponivel} servico="a agenda de rodas" onTentar={r.recarregar} />
-      ) : !r.dados || r.dados.length === 0 ? (
-        <SemNada
-          icone="people-outline"
-          titulo="Nenhuma roda marcada nos próximos 60 dias"
-          texto="Os Centros de Referência LGBTI+ também têm atividades toda semana. Vale ligar ou passar lá."
-        />
-      ) : (
-        <View style={{ gap: espaco.m }}>
-          {r.dados.map((roda) => {
-            const inicio = new Date(roda.inicio);
-            return (
-              <Cartao
-                key={roda.id}
-                onPress={() => router.push({ pathname: '/roda/[id]', params: { id: String(roda.id) } })}
-                rotulo={`${roda.titulo}. ${dataHoraCurta(inicio)}. ${roda.presencial ? `Presencial, ${roda.local?.nome ?? ''}` : 'Online'}. Organizado por ${roda.organizador}.`}
-                dica="Abre os detalhes da roda"
-              >
-                <Texto v="apoioForte" cor={undefined} suave>
-                  {quandoFuturo(inicio, agora)}
-                </Texto>
-                <Texto v="forte">{roda.titulo}</Texto>
-                <Texto v="apoio" suave>
-                  {roda.presencial ? roda.local?.nome ?? 'Local a confirmar' : 'Online, no grupo da ONG'}
-                </Texto>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s }}>
-                  <Selo texto={roda.presencial ? 'Presencial' : 'Online'} tom="azul" />
-                  {roda.idadeMinima > 0 ? <Selo texto={`${roda.idadeMinima}+`} /> : <Selo texto="Livre" />}
-                  {roda.exemplo ? <Selo texto="Exemplo" tom="aviso" /> : null}
-                </View>
-              </Cartao>
-            );
-          })}
-        </View>
-      )}
+      <Secao titulo="Rodas presenciais">
+        {rodas.carregando && !rodas.dados ? (
+          <Carregando />
+        ) : !rodas.dados || rodas.dados.length === 0 ? (
+          <SemNada titulo="Nenhuma roda marcada" texto="Os Centros de Referência têm atividades toda semana." />
+        ) : (
+          <View>
+            {rodas.dados.map((r) => (
+              <Linha
+                key={r.id}
+                titulo={r.titulo}
+                apoio={`${quandoFuturo(new Date(r.inicio), agora)}${r.local ? `, ${r.local.nome}` : ''}`}
+                onPress={() => router.push({ pathname: '/roda/[id]', params: { id: String(r.id) } })}
+                selo={r.exemplo ? <Selo tom="aviso" texto="Exemplo" /> : null}
+              />
+            ))}
+          </View>
+        )}
+      </Secao>
+      <Texto v="apoio" suave>
+        Não tem conversa privada. Na sala, toque e segure uma mensagem para denunciar ou bloquear.
+      </Texto>
     </Tela>
   );
 }

@@ -1,20 +1,43 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, View } from 'react-native';
-import { Botao, Cartao, ComoEntrar, Secao, Selo, SemNada, Texto } from '@/componentes/base';
+import { Pressable, View } from 'react-native';
+import { Botao, Cartao, Linha, Secao, Texto } from '@/componentes/base';
 import { Tela } from '@/componentes/Tela';
-import { useSessao } from '@/estado/Sessao';
-import { proximaOcorrencia, textoFrequencia, type Consulta, type Lembrete } from '@/lib/agenda';
+import { horaTexto, proximaOcorrencia, textoFrequencia, type Consulta, type Lembrete } from '@/lib/agenda';
 import { listarConsultas, listarLembretes, marcarFeito, ultimosRegistros } from '@/lib/banco';
 import { dataHoraCurta, haQuanto, quandoFuturo } from '@/lib/formato';
-import { espaco } from '@/tema/tokens';
-import { useTema } from '@/tema/useTema';
+import { ALVO_MINIMO, espaco } from '@/tema/tokens';
+import { useSecao, useTema } from '@/tema/useTema';
 
 type ItemLembrete = { l: Lembrete; proxima: Date | null; ultimo: string | null };
 
+function feitoHoje(iso: string | null, agora: Date): boolean {
+  if (!iso) return false;
+  const d = new Date(iso);
+  return d.toDateString() === agora.toDateString();
+}
+
+function BotaoFeito({ feito, onPress, nome }: { feito: boolean; onPress: () => void; nome: string }) {
+  const { cor } = useTema();
+  const s = useSecao('agenda');
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={feito ? `${nome}: feito hoje` : `Marcar ${nome} como feito`}
+      accessibilityState={{ checked: feito }}
+      onPress={onPress}
+      disabled={feito}
+      style={{ width: ALVO_MINIMO, height: ALVO_MINIMO, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: feito ? s.acao : cor.superficie }}
+    >
+      <Ionicons name="checkmark" size={26} color={feito ? s.sobreAcao : cor.tintaSuave} />
+    </Pressable>
+  );
+}
+
 export default function Agenda() {
   const { cor } = useTema();
-  const { discreto } = useSessao();
+  const s = useSecao('agenda');
   const [lembretes, setLembretes] = useState<ItemLembrete[]>([]);
   const [consultas, setConsultas] = useState<Consulta[]>([]);
   const [carregado, setCarregado] = useState(false);
@@ -23,9 +46,7 @@ export default function Agenda() {
   const carregar = useCallback(async () => {
     const n = new Date();
     const [ls, cs] = await Promise.all([listarLembretes(), listarConsultas()]);
-    const itens = await Promise.all(
-      ls.map(async (l) => ({ l, proxima: proximaOcorrencia(l, n), ultimo: (await ultimosRegistros(l.id!, 1))[0] ?? null })),
-    );
+    const itens = await Promise.all(ls.map(async (l) => ({ l, proxima: proximaOcorrencia(l, n), ultimo: (await ultimosRegistros(l.id!, 1))[0] ?? null })));
     setLembretes(itens);
     setConsultas(cs.filter((c) => new Date(c.dataHora).getTime() > n.getTime() - 2 * 3600_000));
     setAgora(n);
@@ -38,106 +59,75 @@ export default function Agenda() {
     }, [carregar]),
   );
 
-  const proximo = useMemo(() => {
-    const ativos = lembretes.filter((i) => i.proxima).sort((a, b) => a.proxima!.getTime() - b.proxima!.getTime());
-    return ativos[0] ?? null;
-  }, [lembretes]);
-
-  async function feito(i: ItemLembrete) {
-    await marcarFeito(i.l.id!);
-    await carregar();
-    Alert.alert('Anotado', 'Ficou registrado neste celular.');
-  }
+  const proximo = useMemo(
+    () => lembretes.filter((i) => i.proxima).sort((a, b) => a.proxima!.getTime() - b.proxima!.getTime())[0] ?? null,
+    [lembretes],
+  );
 
   return (
-    <Tela titulo={discreto ? 'Lembretes' : 'Minha agenda'} apoio="Lembretes de hormônio e consultas no horário que você escolher.">
-      <ComoEntrar
-        titulo="Fica só neste celular"
-        texto="Nada da agenda vai para a internet. O app não sugere dose nem horário: siga o que combinou com quem te acompanha."
-      />
-
+    <Tela secao="agenda" titulo="Agenda" apoio="Fica só neste celular.">
       {proximo ? (
-        <Cartao style={{ backgroundColor: cor.azulSuave, borderColor: cor.azulSuave }}>
-          <Texto v="apoioForte" cor={cor.azul}>
-            Próximo lembrete
+        <Cartao tom="secao" style={{ alignItems: 'flex-start' }}>
+          <Texto v="apoioForte" cor={s.sobreSuave}>
+            Próximo
           </Texto>
-          <Texto v="subtitulo">{proximo.l.titulo}</Texto>
-          <Texto>{quandoFuturo(proximo.proxima!, agora)}</Texto>
+          <Texto v="enorme" cor={s.sobreSuave} accessibilityLabel={`Próximo lembrete ${quandoFuturo(proximo.proxima!, agora)}`}>
+            {horaTexto(proximo.proxima!.getHours(), proximo.proxima!.getMinutes())}
+          </Texto>
+          <Texto v="forte" cor={s.sobreSuave}>
+            {proximo.l.titulo}, {quandoFuturo(proximo.proxima!, agora).replace(/ às .*/, '')}
+          </Texto>
+        </Cartao>
+      ) : carregado && lembretes.length === 0 ? (
+        <Cartao tom="secao">
+          <Texto v="subtitulo" cor={s.sobreSuave}>
+            Seu horário, do seu jeito
+          </Texto>
+          <Texto cor={s.sobreSuave}>O app lembra na hora que você escolher e nunca sugere dose.</Texto>
         </Cartao>
       ) : null}
 
-      <Secao titulo="Lembretes">
-        {carregado && lembretes.length === 0 ? (
-          <SemNada
-            icone="alarm-outline"
-            titulo="Nenhum lembrete ainda"
-            texto="Crie um para o horário do seu hormônio ou de qualquer remédio. Pode ser todo dia, alguns dias da semana ou a cada tantos dias."
-          />
-        ) : (
-          lembretes.map((i) => (
-            <Cartao
-              key={i.l.id}
-              onPress={() => router.push({ pathname: '/agenda/lembrete', params: { id: String(i.l.id) } })}
-              rotulo={`${i.l.titulo}. ${textoFrequencia(i.l)}.${i.l.ativo ? '' : ' Pausado.'}`}
-              dica="Abre para editar ou apagar"
-            >
-              <Texto v="forte">{i.l.titulo}</Texto>
-              <Texto v="apoio" suave>
-                {textoFrequencia(i.l)}
-              </Texto>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s }}>
-                {i.l.ativo ? (
-                  i.proxima ? <Selo tom="azul" icone="alarm-outline" texto={quandoFuturo(i.proxima, agora)} /> : null
-                ) : (
-                  <Selo texto="Pausado" />
-                )}
-                {i.ultimo ? <Selo tom="ok" icone="checkmark" texto={`Feito ${haQuanto(i.ultimo, agora)}`} /> : null}
-              </View>
-              {i.l.ativo ? (
-                <Botao
-                  titulo="Marcar como feito"
-                  icone="checkmark-circle-outline"
-                  tipo="secundario"
-                  dica="Registra agora neste celular"
-                  onPress={() => feito(i)}
-                />
-              ) : null}
-            </Cartao>
-          ))
-        )}
-        <Botao titulo="Novo lembrete" icone="add" onPress={() => router.push('/agenda/lembrete')} />
+      <Secao titulo="Lembretes" direita={<Botao titulo="Novo" icone="add" tipo="secundario" onPress={() => router.push('/agenda/lembrete')} />}>
+        {lembretes.map((i) => (
+          <View key={i.l.id} style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.s }}>
+            <View style={{ flex: 1 }}>
+              <Linha
+                titulo={i.l.titulo}
+                apoio={i.l.ativo ? textoFrequencia(i.l) : 'Pausado'}
+                rotulo={`${i.l.titulo}. ${textoFrequencia(i.l)}.${i.ultimo ? ` Último feito ${haQuanto(i.ultimo, agora)}.` : ''}`}
+                dica="Abre para editar"
+                onPress={() => router.push({ pathname: '/agenda/lembrete', params: { id: String(i.l.id) } })}
+              />
+            </View>
+            {i.l.ativo ? (
+              <BotaoFeito
+                nome={i.l.titulo}
+                feito={feitoHoje(i.ultimo, agora)}
+                onPress={async () => {
+                  await marcarFeito(i.l.id!);
+                  await carregar();
+                }}
+              />
+            ) : null}
+          </View>
+        ))}
       </Secao>
 
-      <Secao titulo="Consultas">
+      <Secao titulo="Consultas" direita={<Botao titulo="Nova" icone="add" tipo="secundario" onPress={() => router.push('/agenda/consulta')} />}>
         {carregado && consultas.length === 0 ? (
-          <SemNada
-            icone="calendar-outline"
-            titulo="Nenhuma consulta marcada"
-            texto="Anote a próxima consulta e o app avisa antes, no tempo que você escolher."
-            acao={{ titulo: 'Onde começar no SUS', onPress: () => router.navigate('/saude') }}
-          />
+          <Texto suave>Nenhuma marcada.</Texto>
         ) : (
           consultas.map((c) => (
-            <Cartao
+            <Linha
               key={c.id}
+              titulo={c.titulo}
+              apoio={[dataHoraCurta(new Date(c.dataHora)), c.local].filter(Boolean).join(', ')}
               onPress={() => router.push({ pathname: '/agenda/consulta', params: { id: String(c.id) } })}
-              rotulo={`${c.titulo}. ${dataHoraCurta(new Date(c.dataHora))}. ${c.local}`}
-              dica="Abre para editar ou apagar"
-            >
-              <Texto v="apoioForte" suave>
-                {quandoFuturo(new Date(c.dataHora), agora)}
-              </Texto>
-              <Texto v="forte">{c.titulo}</Texto>
-              {c.local ? (
-                <Texto v="apoio" suave>
-                  {c.local}
-                </Texto>
-              ) : null}
-            </Cartao>
+            />
           ))
         )}
-        <Botao titulo="Nova consulta" icone="add" tipo="secundario" onPress={() => router.push('/agenda/consulta')} />
       </Secao>
+      <View style={{ height: 1, backgroundColor: cor.papel }} />
     </Tela>
   );
 }

@@ -3,6 +3,7 @@ import type { ComponentProps, ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -14,18 +15,19 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { ALVO_MINIMO, espaco, fontes, raio, tipo } from '@/tema/tokens';
-import { useTema } from '@/tema/useTema';
+import { useSecao, useTema } from '@/tema/useTema';
+import { Mascote } from './Mascote';
 
 export type NomeIcone = ComponentProps<typeof Ionicons>['name'];
 
 // ---------- texto ----------
 
-type Variante = 'marca' | 'titulo' | 'subtitulo' | 'corpo' | 'forte' | 'apoio' | 'apoioForte';
+type Variante = 'enorme' | 'titulo' | 'subtitulo' | 'corpo' | 'forte' | 'apoio' | 'apoioForte';
 
 const ESTILO_TEXTO: Record<Variante, TextStyle> = {
-  marca: { fontFamily: fontes.forte, fontSize: tipo.marca, lineHeight: tipo.marca * 1.1, letterSpacing: -0.5 },
-  titulo: { fontFamily: fontes.forte, fontSize: tipo.titulo, lineHeight: tipo.titulo * 1.2 },
-  subtitulo: { fontFamily: fontes.forte, fontSize: tipo.subtitulo, lineHeight: tipo.subtitulo * 1.3 },
+  enorme: { fontFamily: fontes.titulo, fontSize: tipo.enorme, lineHeight: tipo.enorme * 1.1 },
+  titulo: { fontFamily: fontes.titulo, fontSize: tipo.titulo, lineHeight: tipo.titulo * 1.15 },
+  subtitulo: { fontFamily: fontes.titulo, fontSize: tipo.subtitulo, lineHeight: tipo.subtitulo * 1.25 },
   corpo: { fontFamily: fontes.normal, fontSize: tipo.corpo, lineHeight: tipo.corpo * 1.45 },
   forte: { fontFamily: fontes.forte, fontSize: tipo.corpo, lineHeight: tipo.corpo * 1.4 },
   apoio: { fontFamily: fontes.normal, fontSize: tipo.apoio, lineHeight: tipo.apoio * 1.45 },
@@ -40,11 +42,11 @@ export function Texto({
   ...resto
 }: TextProps & { v?: Variante; suave?: boolean; cor?: string }) {
   const { cor } = useTema();
-  const ehTitulo = v === 'titulo' || v === 'marca' || v === 'subtitulo';
+  const ehTitulo = v === 'titulo' || v === 'enorme' || v === 'subtitulo';
   return (
     <Text
       accessibilityRole={ehTitulo ? 'header' : undefined}
-      maxFontSizeMultiplier={ehTitulo ? 1.6 : 2.2}
+      maxFontSizeMultiplier={ehTitulo ? 1.5 : 2.2}
       {...resto}
       style={[ESTILO_TEXTO[v], { color: corForcada ?? (suave ? cor.tintaSuave : cor.tinta) }, style]}
     />
@@ -70,17 +72,15 @@ export function Botao({
   icone?: NomeIcone;
   onPress: () => void;
   tipo?: TipoBotao;
-  /** O que acontece ao tocar, lido pelo leitor de tela depois do nome. */
   dica?: string;
-  /** Nome para o leitor de tela, quando o título visível não basta. */
   rotulo?: string;
   desativado?: boolean;
   carregando?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { cor } = useTema();
-  const fundo = t === 'principal' ? cor.acao : t === 'secundario' ? cor.acaoSuave : 'transparent';
-  const frente = t === 'principal' ? cor.sobreAcao : cor.acao;
+  const s = useSecao();
+  const fundo = t === 'principal' ? s.acao : t === 'secundario' ? s.suave : 'transparent';
+  const frente = t === 'principal' ? s.sobreAcao : t === 'secundario' ? s.sobreSuave : s.acao;
   return (
     <Pressable
       accessibilityRole="button"
@@ -90,9 +90,9 @@ export function Botao({
       disabled={desativado || carregando}
       onPress={onPress}
       style={({ pressed }) => [
-        s.botao,
-        { backgroundColor: fundo, opacity: desativado ? 0.5 : pressed ? 0.85 : 1 },
-        t === 'discreto' && { paddingHorizontal: espaco.s },
+        est.botao,
+        { backgroundColor: fundo, opacity: desativado ? 0.45 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] },
+        t === 'discreto' && { paddingHorizontal: espaco.s, minHeight: ALVO_MINIMO },
         style,
       ]}
     >
@@ -100,8 +100,8 @@ export function Botao({
         <ActivityIndicator color={frente} />
       ) : (
         <>
-          {icone ? <Ionicons name={icone} size={22} color={frente} /> : null}
-          <Texto v="forte" cor={frente} style={s.textoBotao}>
+          {icone ? <Ionicons name={icone} size={21} color={frente} /> : null}
+          <Texto v="forte" cor={frente} style={est.textoBotao}>
             {titulo}
           </Texto>
         </>
@@ -117,6 +117,7 @@ export function BotaoIcone({
   onPress,
   ativo,
   cor: corForcada,
+  fundo,
 }: {
   icone: NomeIcone;
   rotulo: string;
@@ -124,6 +125,7 @@ export function BotaoIcone({
   onPress: () => void;
   ativo?: boolean;
   cor?: string;
+  fundo?: string;
 }) {
   const { cor } = useTema();
   return (
@@ -134,145 +136,162 @@ export function BotaoIcone({
       accessibilityState={ativo === undefined ? undefined : { selected: ativo }}
       hitSlop={6}
       onPress={onPress}
-      style={({ pressed }) => [s.botaoIcone, { opacity: pressed ? 0.6 : 1 }]}
+      style={({ pressed }) => [
+        est.botaoIcone,
+        fundo ? { backgroundColor: fundo, borderRadius: 999 } : null,
+        { opacity: pressed ? 0.6 : 1 },
+      ]}
     >
-      <Ionicons name={icone} size={26} color={corForcada ?? cor.tinta} />
+      <Ionicons name={icone} size={24} color={corForcada ?? cor.tinta} />
     </Pressable>
   );
 }
 
 // ---------- chips de filtro ----------
 
-export function Chip({
-  titulo,
-  ativo,
-  onPress,
-  icone,
-}: {
-  titulo: string;
-  ativo: boolean;
-  onPress: () => void;
-  icone?: NomeIcone;
-}) {
+export function Chip({ titulo, ativo, onPress, icone }: { titulo: string; ativo: boolean; onPress: () => void; icone?: NomeIcone }) {
   const { cor } = useTema();
+  const s = useSecao();
+  const frente = ativo ? s.sobreAcao : cor.tinta;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={titulo}
       accessibilityState={{ selected: ativo }}
       onPress={onPress}
-      style={({ pressed }) => [
-        s.chip,
-        {
-          backgroundColor: ativo ? cor.tinta : cor.superficie,
-          borderColor: ativo ? cor.tinta : cor.linha,
-          opacity: pressed ? 0.8 : 1,
-        },
-      ]}
+      style={({ pressed }) => [est.chip, { backgroundColor: ativo ? s.acao : cor.superficie, opacity: pressed ? 0.8 : 1 }]}
     >
-      {icone ? <Ionicons name={icone} size={18} color={ativo ? cor.papel : cor.tinta} /> : null}
-      <Texto v="apoioForte" cor={ativo ? cor.papel : cor.tinta}>
+      {icone ? <Ionicons name={icone} size={17} color={frente} /> : null}
+      <Texto v="apoioForte" cor={frente}>
         {titulo}
       </Texto>
     </Pressable>
   );
 }
 
-export function LinhaDeChips({ children }: { children: ReactNode }) {
-  return <View style={s.linhaChips}>{children}</View>;
+/** Chips numa linha que rola de lado: ocupa pouco espaço vertical. */
+export function LinhaDeChips({ children, quebrar }: { children: ReactNode; quebrar?: boolean }) {
+  if (quebrar) return <View style={est.chipsQuebra}>{children}</View>;
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={est.chipsRolagem} style={{ marginHorizontal: -espaco.l }}>
+      {children}
+    </ScrollView>
+  );
 }
 
 // ---------- superfícies ----------
 
+/** Bloco macio, sem borda. Use pouco: a maior parte da tela é lista. */
 export function Cartao({
   children,
   onPress,
   rotulo,
   dica,
   style,
+  tom = 'neutro',
 }: {
   children: ReactNode;
   onPress?: () => void;
   rotulo?: string;
   dica?: string;
   style?: StyleProp<ViewStyle>;
+  tom?: 'neutro' | 'secao';
 }) {
   const { cor } = useTema();
-  const base = [s.cartao, { backgroundColor: cor.superficie, borderColor: cor.linha }, style];
+  const s = useSecao();
+  const base = [est.bloco, { backgroundColor: tom === 'secao' ? s.suave : cor.superficie }, style];
   if (!onPress) return <View style={base}>{children}</View>;
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={rotulo}
-      accessibilityHint={dica}
-      onPress={onPress}
-      style={({ pressed }) => [...base, pressed && { backgroundColor: cor.superficieForte }]}
-    >
+    <Pressable accessibilityRole="button" accessibilityLabel={rotulo} accessibilityHint={dica} onPress={onPress} style={({ pressed }) => [...base, { opacity: pressed ? 0.85 : 1 }]}>
       {children}
     </Pressable>
   );
 }
 
-/** Etiqueta curta de estado: "Aberto agora", "3 vagas agora", "Afirmativa". */
-export function Selo({ texto, tom = 'neutro', icone }: { texto: string; tom?: 'ok' | 'fechado' | 'neutro' | 'azul' | 'aviso'; icone?: NomeIcone }) {
+/** Uma linha de lista: título, uma linha de apoio e um selo. Sem caixa em volta. */
+export function Linha({
+  titulo,
+  apoio,
+  direita,
+  selo,
+  onPress,
+  rotulo,
+  dica,
+  marca,
+}: {
+  titulo: string;
+  apoio?: string | null;
+  direita?: string | null;
+  selo?: ReactNode;
+  onPress: () => void;
+  rotulo?: string;
+  dica?: string;
+  /** bolinha colorida à esquerda (ex.: aberto agora) */
+  marca?: string;
+}) {
   const { cor } = useTema();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={rotulo ?? [titulo, apoio, direita].filter(Boolean).join('. ')}
+      accessibilityHint={dica}
+      onPress={onPress}
+      style={({ pressed }) => [est.linha, { opacity: pressed ? 0.6 : 1 }]}
+    >
+      {marca ? <View style={[est.marca, { backgroundColor: marca }]} /> : null}
+      <View style={{ flex: 1, gap: 3 }}>
+        <Texto v="forte">{titulo}</Texto>
+        {apoio ? (
+          <Texto v="apoio" suave numberOfLines={2}>
+            {apoio}
+          </Texto>
+        ) : null}
+        {selo ? <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s, marginTop: 4 }}>{selo}</View> : null}
+      </View>
+      <View style={{ alignItems: 'flex-end', gap: 4 }}>
+        {direita ? (
+          <Texto v="apoioForte" suave>
+            {direita}
+          </Texto>
+        ) : null}
+        <Ionicons name="chevron-forward" size={20} color={cor.tintaSuave} />
+      </View>
+    </Pressable>
+  );
+}
+
+export function Selo({ texto, tom = 'neutro', icone }: { texto: string; tom?: 'ok' | 'fechado' | 'neutro' | 'secao' | 'aviso'; icone?: NomeIcone }) {
+  const { cor } = useTema();
+  const s = useSecao();
   const mapa = {
     ok: [cor.okFundo, cor.ok],
-    fechado: [cor.acaoSuave, cor.acao],
-    neutro: [cor.superficieForte, cor.tintaSuave],
-    azul: [cor.azulSuave, cor.azul],
+    fechado: [cor.superficieForte, cor.tintaSuave],
+    neutro: [cor.superficie, cor.tintaSuave],
+    secao: [s.suave, s.sobreSuave],
     aviso: [cor.avisoFundo, cor.aviso],
   } as const;
   const [fundo, frente] = mapa[tom];
   return (
-    <View style={[s.selo, { backgroundColor: fundo }]}>
-      {icone ? <Ionicons name={icone} size={15} color={frente} /> : null}
-      <Texto v="apoioForte" cor={frente}>
+    <View style={[est.selo, { backgroundColor: fundo }]}>
+      {icone ? <Ionicons name={icone} size={14} color={frente} /> : null}
+      <Texto v="apoioForte" cor={frente} style={{ fontSize: 14, lineHeight: 19 }}>
         {texto}
       </Texto>
     </View>
   );
 }
 
-/**
- * A fita: duas listras, rosa e azul. É o único enfeite do app e aparece em três lugares:
- * sob o nome na abertura, na aba ativa e na lateral do "como entrar".
- */
-export function Fita({ vertical, espessura = 4, comprimento }: { vertical?: boolean; espessura?: number; comprimento?: number }) {
-  const { cor } = useTema();
-  const ocultar = { importantForAccessibility: 'no-hide-descendants' as const, accessibilityElementsHidden: true };
-  if (vertical) {
-    return (
-      <View {...ocultar} style={{ flexDirection: 'row', alignSelf: 'stretch' }}>
-        <View style={{ width: espessura, backgroundColor: cor.fitaAzul }} />
-        <View style={{ width: espessura, backgroundColor: cor.fitaRosa }} />
-      </View>
-    );
-  }
-  return (
-    <View {...ocultar} style={comprimento ? { width: comprimento } : { alignSelf: 'stretch' }}>
-      <View style={{ height: espessura, backgroundColor: cor.fitaAzul }} />
-      <View style={{ height: espessura, backgroundColor: cor.fitaRosa }} />
-    </View>
-  );
-}
-
-/** O passo de entrada do serviço. É o que mais importa no cartão, então tem destaque próprio. */
+/** O passo de entrada do serviço: a informação mais importante do detalhe. */
 export function ComoEntrar({ texto, titulo = 'Como entrar' }: { texto: string; titulo?: string }) {
-  const { cor } = useTema();
+  const s = useSecao();
   return (
-    <View
-      accessible
-      accessibilityLabel={`${titulo}: ${texto}`}
-      style={[s.comoEntrar, { backgroundColor: cor.superficieForte }]}
-    >
-      <Fita vertical espessura={4} />
-      <View style={{ flex: 1, padding: espaco.m, gap: 2 }}>
-        <Texto v="apoioForte" suave>
-          {titulo}
-        </Texto>
-        <Texto>{texto}</Texto>
-      </View>
+    <View accessible accessibilityLabel={`${titulo}: ${texto}`} style={[est.bloco, { backgroundColor: s.suave }]}>
+      <Texto v="apoioForte" cor={s.sobreSuave}>
+        {titulo}
+      </Texto>
+      <Texto v="subtitulo" cor={s.sobreSuave} style={{ fontFamily: fontes.normal, fontSize: 19, lineHeight: 27 }}>
+        {texto}
+      </Texto>
     </View>
   );
 }
@@ -280,84 +299,57 @@ export function ComoEntrar({ texto, titulo = 'Como entrar' }: { texto: string; t
 // ---------- estados da tela ----------
 
 export function Carregando({ texto = 'Carregando…' }: { texto?: string }) {
-  const { cor } = useTema();
+  const s = useSecao();
   return (
-    <View style={s.centro} accessibilityLiveRegion="polite" accessible accessibilityLabel={texto}>
-      <ActivityIndicator size="large" color={cor.acao} />
-      <Texto suave>{texto}</Texto>
+    <View style={est.centro} accessibilityLiveRegion="polite" accessible accessibilityLabel={texto}>
+      <ActivityIndicator size="large" color={s.acao} />
     </View>
   );
 }
 
-/** Faixa que diz que o dado é guardado e de quando ele é. */
+/** Faixa curta: o dado é guardado, e de quando ele é. */
 export function AvisoCache({ desde, onTentar }: { desde: string; onTentar: () => void }) {
   const { cor } = useTema();
   return (
-    <View
-      style={[s.aviso, { backgroundColor: cor.avisoFundo }]}
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Sem conexão. Mostrando o que foi guardado ${desde}. Toque para tentar atualizar.`}
+      onPress={onTentar}
+      style={[est.aviso, { backgroundColor: cor.avisoFundo }]}
       accessibilityLiveRegion="polite"
     >
-      <Ionicons name="cloud-offline-outline" size={22} color={cor.aviso} />
-      <View style={{ flex: 1, gap: 2 }}>
-        <Texto v="apoioForte" cor={cor.aviso}>
-          Sem conexão com o serviço agora
-        </Texto>
-        <Texto v="apoio" cor={cor.aviso}>
-          Você está vendo o que foi guardado {desde}. Pode ter mudado desde então.
-        </Texto>
-      </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Tentar atualizar"
-        onPress={onTentar}
-        style={s.avisoBotao}
-      >
-        <Texto v="apoioForte" cor={cor.aviso} style={{ textDecorationLine: 'underline' }}>
-          Atualizar
-        </Texto>
-      </Pressable>
-    </View>
+      <Ionicons name="cloud-offline-outline" size={20} color={cor.aviso} />
+      <Texto v="apoio" cor={cor.aviso} style={{ flex: 1 }}>
+        Sem conexão. Mostrando o que foi guardado {desde}.
+      </Texto>
+      <Ionicons name="refresh" size={20} color={cor.aviso} />
+    </Pressable>
   );
 }
 
-/** Nada para mostrar: sempre diz por quê e o que dá para fazer. */
-export function SemNada({
-  titulo,
-  texto,
-  icone = 'leaf-outline',
-  acao,
-}: {
-  titulo: string;
-  texto: string;
-  icone?: NomeIcone;
-  acao?: { titulo: string; onPress: () => void };
-}) {
-  const { cor } = useTema();
+/** Nada para mostrar: sempre diz por quê, curto, e o que dá para fazer. */
+export function SemNada({ titulo, texto, acao }: { titulo: string; texto?: string; icone?: NomeIcone; acao?: { titulo: string; onPress: () => void } }) {
   return (
-    <View style={[s.semNada, { borderColor: cor.linha }]} accessibilityLiveRegion="polite">
-      <Ionicons name={icone} size={32} color={cor.tintaSuave} />
-      <Texto v="forte" style={{ textAlign: 'center' }}>
+    <View style={est.semNada} accessibilityLiveRegion="polite">
+      <Mascote tamanho={84} />
+      <Texto v="subtitulo" style={{ textAlign: 'center' }}>
         {titulo}
       </Texto>
-      <Texto suave style={{ textAlign: 'center' }}>
-        {texto}
-      </Texto>
+      {texto ? (
+        <Texto suave style={{ textAlign: 'center' }}>
+          {texto}
+        </Texto>
+      ) : null}
       {acao ? <Botao titulo={acao.titulo} tipo="secundario" onPress={acao.onPress} /> : null}
     </View>
   );
 }
 
-/** Erro sem cache: explica de um jeito que dá para agir. */
-export function ErroSemCache({ erro, indisponivel, servico, onTentar }: { erro: string; indisponivel: boolean; servico: string; onTentar: () => void }) {
+export function ErroSemCache({ erro, indisponivel, onTentar }: { erro: string; indisponivel: boolean; servico?: string; onTentar: () => void }) {
   return (
     <SemNada
-      icone={indisponivel ? 'cloud-offline-outline' : 'alert-circle-outline'}
-      titulo={indisponivel ? `Não deu para falar com ${servico}` : 'Não foi possível abrir'}
-      texto={
-        indisponivel
-          ? 'E ainda não há nada guardado neste celular para mostrar. Confira a internet e tente de novo. Se continuar, o serviço pode estar fora do ar.'
-          : erro
-      }
+      titulo={indisponivel ? 'Sem conexão agora' : 'Não deu para abrir'}
+      texto={indisponivel ? 'E ainda não tem nada guardado aqui. Confira a internet.' : erro}
       acao={{ titulo: 'Tentar de novo', onPress: onTentar }}
     />
   );
@@ -369,10 +361,7 @@ export function Campo({ rotulo, ajuda, erro, ...props }: TextInputProps & { rotu
   const { cor } = useTema();
   return (
     <View style={{ gap: espaco.xs }}>
-      <Texto v="forte" nativeID={`rotulo-${rotulo}`}>
-        {rotulo}
-      </Texto>
-      {ajuda ? <Texto v="apoio" suave>{ajuda}</Texto> : null}
+      <Texto v="apoioForte">{rotulo}</Texto>
       <TextInput
         accessibilityLabel={rotulo}
         accessibilityHint={ajuda}
@@ -380,11 +369,16 @@ export function Campo({ rotulo, ajuda, erro, ...props }: TextInputProps & { rotu
         maxFontSizeMultiplier={2}
         {...props}
         style={[
-          s.campo,
-          { color: cor.tinta, backgroundColor: cor.superficie, borderColor: erro ? cor.perigo : cor.linha },
-          props.multiline && { minHeight: 96, textAlignVertical: 'top' },
+          est.campo,
+          { color: cor.tinta, backgroundColor: cor.superficie, borderColor: erro ? cor.perigo : 'transparent' },
+          props.multiline && { minHeight: 96, textAlignVertical: 'top', paddingTop: espaco.m },
         ]}
       />
+      {ajuda ? (
+        <Texto v="apoio" suave>
+          {ajuda}
+        </Texto>
+      ) : null}
       {erro ? (
         <Texto v="apoioForte" cor={cor.perigo} accessibilityLiveRegion="polite">
           {erro}
@@ -394,10 +388,29 @@ export function Campo({ rotulo, ajuda, erro, ...props }: TextInputProps & { rotu
   );
 }
 
+/** Campo de busca com lupa. O rótulo vai só para o leitor de tela. */
+export function Busca({ rotulo, ...props }: TextInputProps & { rotulo: string }) {
+  const { cor } = useTema();
+  return (
+    <View style={[est.busca, { backgroundColor: cor.superficie }]}>
+      <Ionicons name="search" size={20} color={cor.tintaSuave} />
+      <TextInput
+        accessibilityLabel={rotulo}
+        placeholder={rotulo}
+        placeholderTextColor={cor.tintaSuave}
+        returnKeyType="search"
+        maxFontSizeMultiplier={2}
+        {...props}
+        style={{ flex: 1, color: cor.tinta, fontFamily: fontes.normal, fontSize: tipo.corpo, minHeight: ALVO_MINIMO }}
+      />
+    </View>
+  );
+}
+
 export function Secao({ titulo, children, direita }: { titulo: string; children: ReactNode; direita?: ReactNode }) {
   return (
-    <View style={{ gap: espaco.m }}>
-      <View style={s.secaoTopo}>
+    <View style={{ gap: espaco.s }}>
+      <View style={est.secaoTopo}>
         <Texto v="subtitulo" style={{ flex: 1 }}>
           {titulo}
         </Texto>
@@ -411,18 +424,18 @@ export function Secao({ titulo, children, direita }: { titulo: string; children:
 export function LinhaInfo({ icone, children, rotulo }: { icone: NomeIcone; children: ReactNode; rotulo?: string }) {
   const { cor } = useTema();
   return (
-    <View style={s.linhaInfo} accessible={!!rotulo} accessibilityLabel={rotulo}>
+    <View style={est.linhaInfo} accessible={!!rotulo} accessibilityLabel={rotulo}>
       <Ionicons name={icone} size={20} color={cor.tintaSuave} style={{ marginTop: 2 }} />
       <View style={{ flex: 1 }}>{children}</View>
     </View>
   );
 }
 
-const s = StyleSheet.create({
+const est = StyleSheet.create({
   botao: {
-    minHeight: ALVO_MINIMO + 4,
+    minHeight: ALVO_MINIMO + 6,
     borderRadius: raio.botao,
-    paddingHorizontal: espaco.l,
+    paddingHorizontal: espaco.xl,
     paddingVertical: espaco.s,
     flexDirection: 'row',
     alignItems: 'center',
@@ -431,47 +444,18 @@ const s = StyleSheet.create({
   },
   textoBotao: { textAlign: 'center', flexShrink: 1 },
   botaoIcone: { minWidth: ALVO_MINIMO, minHeight: ALVO_MINIMO, alignItems: 'center', justifyContent: 'center' },
-  chip: {
-    minHeight: ALVO_MINIMO,
-    borderRadius: raio.chip,
-    borderWidth: 1,
-    paddingHorizontal: espaco.l,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  linhaChips: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s },
-  cartao: { borderRadius: raio.cartao, borderWidth: 1, padding: espaco.l, gap: espaco.s },
-  selo: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderRadius: 8,
-    paddingHorizontal: espaco.s,
-    paddingVertical: 3,
-  },
-  comoEntrar: { flexDirection: 'row', borderRadius: 6, overflow: 'hidden' },
-  centro: { alignItems: 'center', justifyContent: 'center', gap: espaco.m, paddingVertical: espaco.xxl },
-  aviso: { flexDirection: 'row', gap: espaco.m, padding: espaco.m, borderRadius: raio.botao, alignItems: 'flex-start' },
-  avisoBotao: { minHeight: ALVO_MINIMO, justifyContent: 'center', paddingHorizontal: espaco.xs },
-  semNada: {
-    alignItems: 'center',
-    gap: espaco.s,
-    padding: espaco.xl,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderRadius: raio.cartao,
-  },
-  campo: {
-    minHeight: ALVO_MINIMO + 4,
-    borderWidth: 1,
-    borderRadius: raio.botao,
-    paddingHorizontal: espaco.m,
-    paddingVertical: espaco.s,
-    fontFamily: fontes.normal,
-    fontSize: tipo.corpo,
-  },
+  chip: { minHeight: ALVO_MINIMO - 4, borderRadius: raio.chip, paddingHorizontal: espaco.l, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  chipsRolagem: { gap: espaco.s, paddingHorizontal: espaco.l },
+  chipsQuebra: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s },
+  bloco: { borderRadius: raio.bloco, padding: espaco.l + 4, gap: espaco.s },
+  linha: { flexDirection: 'row', alignItems: 'center', gap: espaco.m, paddingVertical: espaco.m + 2, minHeight: 64 },
+  marca: { width: 10, height: 10, borderRadius: 5, alignSelf: 'flex-start', marginTop: 8 },
+  selo: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
+  centro: { alignItems: 'center', justifyContent: 'center', paddingVertical: espaco.xxl },
+  aviso: { flexDirection: 'row', gap: espaco.s, paddingHorizontal: espaco.l, paddingVertical: espaco.m, borderRadius: raio.bloco, alignItems: 'center', minHeight: ALVO_MINIMO },
+  semNada: { alignItems: 'center', gap: espaco.s, paddingVertical: espaco.xl, paddingHorizontal: espaco.l },
+  campo: { minHeight: ALVO_MINIMO + 6, borderWidth: 1.5, borderRadius: raio.campo, paddingHorizontal: espaco.l, fontFamily: fontes.normal, fontSize: tipo.corpo },
+  busca: { flexDirection: 'row', alignItems: 'center', gap: espaco.s, borderRadius: raio.chip, paddingHorizontal: espaco.l },
   secaoTopo: { flexDirection: 'row', alignItems: 'center', gap: espaco.s },
   linhaInfo: { flexDirection: 'row', gap: espaco.s, alignItems: 'flex-start' },
 });

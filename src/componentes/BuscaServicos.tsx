@@ -5,35 +5,40 @@ import { apiCsharp, type FiltroServicos } from '@/lib/api/csharp';
 import type { Atendimento, Categoria, Pagina, ServicoResumo, VagasCasa } from '@/lib/api/tipos';
 import { haQuanto } from '@/lib/formato';
 import { pedirPosicao, type Posicao } from '@/lib/localizacao';
-import { espaco } from '@/tema/tokens';
-import { AvisoCache, Campo, Carregando, Chip, ErroSemCache, LinhaDeChips, SemNada, Texto } from './base';
+import type { NomeSecao } from '@/tema/tokens';
+import { AvisoCache, Busca, Carregando, Chip, ErroSemCache, LinhaDeChips, SemNada, Texto } from './base';
+import { Mapa } from './Mapa';
 import { ServicoItem } from './Servico';
 import { Tela } from './Tela';
 
 export type OpcaoFiltro = { chave: string; titulo: string; categoria?: Categoria; atendimento?: Atendimento[] };
 
-/**
- * Tela de busca no catálogo da API C#. Usada nas abas casa, saúde e rolês.
- * `permitidas` limita o que aparece quando a opção não fixa uma categoria.
- */
+/** Busca no catálogo da API C#. Usada nas abas casa, saúde e rolês. */
 export function BuscaServicos({
+  secao,
   titulo,
   apoio,
   opcoes,
   permitidas,
   vagasCasas,
   topo,
+  antes,
   depois,
-  textoBusca = 'Buscar pelo nome',
+  textoBusca = 'Buscar por nome ou bairro',
+  comMapa,
 }: {
+  secao: NomeSecao;
   titulo: string;
-  apoio: string;
+  apoio?: string;
   opcoes: OpcaoFiltro[];
   permitidas: Categoria[];
   vagasCasas?: boolean;
   topo?: ReactNode;
+  antes?: ReactNode;
   depois?: ReactNode;
   textoBusca?: string;
+  /** mostra o botão Mapa (OpenStreetMap) */
+  comMapa?: boolean;
 }) {
   const [opcao, setOpcao] = useState(opcoes[0].chave);
   const [texto, setTexto] = useState('');
@@ -41,6 +46,7 @@ export function BuscaServicos({
   const [abertos, setAbertos] = useState(false);
   const [posicao, setPosicao] = useState<Posicao | null>(null);
   const [avisoPosicao, setAvisoPosicao] = useState<string | null>(null);
+  const [verMapa, setVerMapa] = useState(false);
 
   const escolhida = opcoes.find((o) => o.chave === opcao) ?? opcoes[0];
   const filtro: FiltroServicos = {
@@ -74,12 +80,21 @@ export function BuscaServicos({
     if ('posicao' in res) {
       setPosicao(res.posicao);
       setAvisoPosicao(null);
-    } else if ('negado' in res) setAvisoPosicao('Sem acesso à localização. Dá para buscar pelo nome ou bairro.');
+    } else if ('negado' in res) setAvisoPosicao('Sem acesso à localização. Busque pelo bairro.');
     else setAvisoPosicao(res.erro);
+  }
+
+  function limpar() {
+    setTexto('');
+    setBusca('');
+    setAbertos(false);
+    setPosicao(null);
+    setOpcao(opcoes[0].chave);
   }
 
   return (
     <Tela
+      secao={secao}
       titulo={titulo}
       apoio={apoio}
       topo={topo}
@@ -89,66 +104,39 @@ export function BuscaServicos({
         casas.recarregar();
       }}
     >
-      <View style={{ gap: espaco.m }}>
-        <LinhaDeChips>
-          {opcoes.map((o) => (
-            <Chip key={o.chave} titulo={o.titulo} ativo={o.chave === opcao} onPress={() => setOpcao(o.chave)} />
-          ))}
-        </LinhaDeChips>
-        <Campo
-          rotulo={textoBusca}
-          placeholder="Ex.: República, hormonização"
-          value={texto}
-          onChangeText={setTexto}
-          returnKeyType="search"
-          onSubmitEditing={() => setBusca(texto.trim())}
-          onBlur={() => setBusca(texto.trim())}
-        />
-        <LinhaDeChips>
-          <Chip titulo="Aberto agora" icone="time-outline" ativo={abertos} onPress={() => setAbertos((v) => !v)} />
-          <Chip titulo="Perto de mim" icone="navigate-outline" ativo={!!posicao} onPress={alternarPerto} />
-        </LinhaDeChips>
-        {avisoPosicao ? (
-          <Texto v="apoio" suave accessibilityLiveRegion="polite">
-            {avisoPosicao}
-          </Texto>
-        ) : null}
-      </View>
+      <Busca rotulo={textoBusca} value={texto} onChangeText={setTexto} onSubmitEditing={() => setBusca(texto.trim())} onBlur={() => setBusca(texto.trim())} />
+      <LinhaDeChips>
+        {opcoes.length > 1
+          ? opcoes.map((o) => <Chip key={o.chave} titulo={o.titulo} ativo={o.chave === opcao} onPress={() => setOpcao(o.chave)} />)
+          : null}
+        <Chip titulo="Aberto agora" icone="time-outline" ativo={abertos} onPress={() => setAbertos((v) => !v)} />
+        <Chip titulo="Perto de mim" icone="navigate-outline" ativo={!!posicao} onPress={alternarPerto} />
+        {comMapa ? <Chip titulo="Mapa" icone="map-outline" ativo={verMapa} onPress={() => setVerMapa((v) => !v)} /> : null}
+      </LinhaDeChips>
+      {avisoPosicao ? (
+        <Texto v="apoio" suave accessibilityLiveRegion="polite">
+          {avisoPosicao}
+        </Texto>
+      ) : null}
+
+      {antes}
 
       {r.doCacheDesde ? <AvisoCache desde={haQuanto(r.doCacheDesde, new Date())} onTentar={r.recarregar} /> : null}
 
       {r.carregando && !r.dados ? (
-        <Carregando texto="Procurando serviços…" />
+        <Carregando texto="Procurando…" />
       ) : r.erro ? (
-        <ErroSemCache erro={r.erro} indisponivel={r.indisponivel} servico="o catálogo do Aquenda" onTentar={r.recarregar} />
+        <ErroSemCache erro={r.erro} indisponivel={r.indisponivel} onTentar={r.recarregar} />
       ) : itens.length === 0 ? (
-        <SemNada
-          titulo="Nada encontrado com esses filtros"
-          texto={
-            abertos
-              ? 'Pode ser que nada esteja aberto neste horário. Tire o filtro "Aberto agora" para ver tudo.'
-              : 'Tente outra palavra ou tire algum filtro.'
-          }
-          acao={{
-            titulo: 'Limpar filtros',
-            onPress: () => {
-              setTexto('');
-              setBusca('');
-              setAbertos(false);
-              setPosicao(null);
-              setOpcao(opcoes[0].chave);
-            },
-          }}
-        />
+        <SemNada titulo="Nada por aqui" texto={abertos ? 'Nada aberto neste horário.' : 'Tente outra palavra.'} acao={{ titulo: 'Limpar filtros', onPress: limpar }} />
       ) : (
-        <View style={{ gap: espaco.m }}>
-          <Texto v="apoio" suave accessibilityLiveRegion="polite">
-            {itens.length === 1 ? '1 lugar' : `${itens.length} lugares`}
-            {posicao ? ', do mais perto para o mais longe' : ''}
-          </Texto>
+        <View style={{ gap: 8 }}>
+        {verMapa ? <Mapa servicos={itens} /> : null}
+        <View accessibilityLabel={posicao ? `${itens.length} lugares, do mais perto para o mais longe` : `${itens.length} lugares`}>
           {itens.map((s) => (
             <ServicoItem key={s.id} servico={s} vagas={vagasPorCasa.get(s.id)} />
           ))}
+        </View>
         </View>
       )}
       {depois}
