@@ -1,7 +1,8 @@
 // Cliente HTTP mínimo em cima do fetch: tempo limite, JSON e erros no formato
 // ProblemDetails (RFC 7807), que as duas APIs do Aquenda usam.
+import { verificarSaida } from '../saidaSegura';
 
-export type TipoErro = 'rede' | 'tempo' | 'http' | 'formato';
+export type TipoErro = 'rede' | 'tempo' | 'http' | 'formato' | 'bloqueado';
 
 export class ErroApi extends Error {
   readonly tipo: TipoErro;
@@ -55,6 +56,13 @@ export type OpcoesPedido = {
 
 export async function pedirJson<T>(url: string, opcoes: OpcoesPedido = {}): Promise<T> {
   const { metodo = 'GET', corpo, cabecalhos = {}, tempoLimiteMs = 8000 } = opcoes;
+
+  // última barreira: documento, credencial ou remédio com dose não saem do celular
+  const proibido = verificarSaida(url, corpo);
+  if (proibido.length) {
+    throw new ErroApi('bloqueado', `Para sua proteção, isso não foi enviado: tem ${proibido.map((b) => b.nome).join(', ')}. Tire e tente de novo.`);
+  }
+
   const controle = new AbortController();
   let estourou = false;
   const timer = setTimeout(() => {
