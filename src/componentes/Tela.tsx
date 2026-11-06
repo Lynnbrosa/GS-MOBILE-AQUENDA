@@ -35,7 +35,7 @@ function Topo({ secao, titulo, apoio, extra }: { secao: NomeSecao; titulo: strin
   return (
     <View style={[est.topo, { backgroundColor: s.topo, paddingTop: insets.top + espaco.xs }]}>
       <View style={est.forma}>
-        <FormaSecao secao={secao} cor={s.forma} tamanho={170} />
+        <FormaSecao secao={secao} cor={s.forma} tamanho={200} />
       </View>
       <View style={est.barra}>
         <BotaoIcone icone="settings-outline" rotulo="Ajustes" dica="Modo discreto, PIN e seus dados" cor={s.sobreTopo} onPress={() => router.push('/ajustes')} />
@@ -43,7 +43,7 @@ function Topo({ secao, titulo, apoio, extra }: { secao: NomeSecao; titulo: strin
         <SaidaRapida />
       </View>
       {extra}
-      <View style={{ gap: espaco.xs, paddingRight: 90 }}>
+      <View style={{ gap: espaco.xs, paddingRight: 130 }}>
         <Texto v="titulo" cor={s.sobreTopo}>
           {titulo}
         </Texto>
@@ -116,7 +116,7 @@ const est = StyleSheet.create({
     overflow: 'hidden',
     gap: espaco.m,
   },
-  forma: { position: 'absolute', right: -26, bottom: -64 },
+  forma: { position: 'absolute', right: -18, bottom: -58 },
   barra: { flexDirection: 'row', alignItems: 'center', marginLeft: -espaco.s },
   saida: {
     minHeight: ALVO_MINIMO - 4,

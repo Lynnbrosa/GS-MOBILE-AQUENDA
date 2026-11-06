@@ -1,43 +1,47 @@
 # Aquenda: direção visual
 
-O app é para alguém que pode estar com pressa, com medo ou sem lugar para dormir. Ele precisa parecer um bilhete de alguém que conhece o caminho, e não um painel de sistema. As escolhas abaixo valem para todas as telas e estão no código em `src/tema/tokens.ts`.
+Tudo sai da logo: um elefantinho com a pele de casca de kiwi, a orelha de kiwi cortado e a tromba de arco-íris pastel desenhando a letra "a". O app tem o mesmo jeito: ilustração de livro infantil, acolhedor, com pouco texto. As referências que guiaram o resto foram o Headspace (uma cor forte por seção, título curto, uma ação por tela) e o Finch (formas macias, autocuidado sem pressa). Os tokens estão em `src/tema/tokens.ts`.
 
 ## Cor
 
-| Nome | Claro | Escuro | Para quê |
-|---|---|---|---|
-| papel | `#F4F2F7` | `#17121C` | fundo de todas as telas: um lilás quase branco, frio o bastante para não virar "creme" |
-| tinta | `#22172B` | `#F1ECF4` | texto principal: ameixa, mais macio que o preto |
-| tinta suave | `#574B61` | `#C4BACC` | texto de apoio (passa de 4,5:1 nos dois temas) |
-| rosa-cravo | `#A3305A` | `#F39BB9` | o que se toca: botões principais, links, chip ativo |
-| azul | `#245F7C` | `#92D2EC` | informação boa: "3 vagas agora", vaga afirmativa, próximo lembrete |
-| fita | `#8DD3EE` + `#F2A7BB` | iguais | o único enfeite (ver abaixo) |
+| Papel | Claro | Para quê |
+|---|---|---|
+| papel | `#FFFFFF` | fundo, como o fundo da logo |
+| superfície | `#F7F2EC` | campos, bolhas do chat, blocos |
+| tinta | `#3A2A1F` | texto: o marrom da casca do kiwi |
+| tinta suave | `#6B5847` | texto de apoio |
 
-Todo par de texto e fundo é testado em `__tests__/contraste.test.ts` (WCAG AA, 4,5:1).
+Cada aba pega um tom do arco-íris da tromba. Juntas, as seis formam o arco inteiro, a comunidade toda, sem destacar uma bandeira só:
+
+| Aba | Tom | Topo | Ação |
+|---|---|---|---|
+| Rodas e salas | coral | `#FBD6D5` | `#AC3636` |
+| Casa | laranja | `#FFDDBE` | `#A84B0C` |
+| Rolês | amarelo | `#FCEDB3` | `#856000` |
+| Saúde | verde-kiwi | `#DCEFBF` | `#4A7314` |
+| Vagas | azul | `#D3E5F7` | `#2C61A3` |
+| Agenda | lilás | `#E6DCF6` | `#6547AA` |
+
+O topo é o tom claro (texto marrom por cima); botões e chips ativos usam o tom escuro (texto branco). Tem modo escuro com os mesmos papéis. Todos os pares, nos dois temas e nas seis abas, passam de 4,5:1 (`__tests__/contraste.test.ts`).
 
 ## Tipo
 
-Uma família só: **Atkinson Hyperlegible**, do Braille Institute, feita para baixa visão (I, l e 1 não se confundem; nem O e 0). Regular para ler, Bold para títulos e ações. O corpo é 17 pt, e tudo cresce com o tamanho de fonte do celular.
+- **Fredoka** (redonda) só nos títulos: conversa com o traço gordinho da logo.
+- **Atkinson Hyperlegible** em todo o resto: feita pelo Braille Institute para baixa visão.
 
-## A fita
+Corpo de 17 pt, e tudo cresce com o tamanho de fonte do celular.
 
-Duas listras finas, azul e rosa. Quem é da comunidade reconhece a bandeira; para quem está de fora, é só um detalhe gráfico. Ela aparece em três lugares e mais nenhum:
+## Forma
 
-1. sob o nome *aquenda* na aba casa;
-2. em cima do ícone da aba em que você está;
-3. na lateral da caixa **Como entrar**, o passo de entrada de cada serviço, que é a informação mais importante do app.
-
-## Layout
-
-Lista alinhada à esquerda, um cartão por lugar. O cartão diz nome, endereço (ou "Endereço protegido" para casas de acolhimento), selos de estado e, sempre, o "Como entrar". Os raios mudam com a hierarquia: cartão 18, botão 12, chip redondo, a fita reta. Sem sombras: bordas finas na cor `linha`.
-
-## O que evitamos de propósito
-
-- rótulo em caixa alta acima de título, números 01/02/03 decorativos, seta "→" em botão;
-- uma palavra colorida no meio do título;
-- gradiente, sombra cinza igual em tudo, ícone dentro de quadrado arredondado;
-- creme com terracota, preto com verde-limão.
+- **Topo de cada aba**: o tom da aba com a borda de baixo bem arredondada (36) e, no canto, um **arco-íris pastel** igual à tromba, começando pela cor da aba.
+- **Listas sem caixa**: cada lugar é uma linha (nome, bairro, um selo só) com a setinha. Nada de cartão com borda e sombra em volta de tudo.
+- **Pílulas**: botões e chips são redondos; blocos de destaque têm raio 24.
+- O **mascote** aparece na abertura da aba Casa, nas telas vazias ("Nada por aqui") e na entrada das salas.
 
 ## Escrita
 
-Você, frases curtas, verbo no começo do botão ("Salvar lembrete", "Avisar que fechou"). Linguagem neutra em gênero quando precisa ("encaminhade"). Erro diz o que houve e o que fazer; tela vazia diz por que está vazia.
+Pouco texto. Título curto ("Trabalho", "Agenda", "Do que você precisa?") e uma linha de apoio no máximo. O "como entrar" de cada serviço só aparece no detalhe, em destaque. Botão começa com verbo. Linguagem neutra quando precisa ("chamade", "encaminhade"). Erro diz o que houve e o que fazer.
+
+## O que evitamos
+
+Rótulo em caixa alta, numeração decorativa, seta em botão, uma palavra colorida no título, gradiente, a mesma sombra cinza em tudo e os combos "creme com terracota" ou "preto com verde-limão".

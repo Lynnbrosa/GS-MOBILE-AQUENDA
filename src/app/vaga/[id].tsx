@@ -33,7 +33,7 @@ export default function DetalheVaga() {
       ) : (
         <>
           <View style={{ gap: espaco.s }}>
-            <Texto v="titulo">{v.titulo}</Texto>
+            <Texto v={v.titulo.length > 60 ? 'subtitulo' : 'titulo'}>{v.titulo}</Texto>
             <Texto suave>{v.empresa}</Texto>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s }}>
               {v.afirmativa ? <Selo tom="secao" icone="heart-outline" texto="Afirmativa" /> : null}

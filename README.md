@@ -37,10 +37,10 @@ O nome vem do pajubá, a linguagem criada e mantida pela comunidade travesti: *a
 | **Saúde** | Rede SAMPA Trans, hormonização e saúde mental, com "Por onde começar" (UBS). Abaixo, as unidades **habilitadas no processo transexualizador do SUS** (30.01, 30.02, 30.03), filtráveis por habilitação. | API C#: `/api/servicos?categoria=Saude` · FastAPI: `/api/municipios/3550308/estabelecimentos`, `/api/cnes/estabelecimentos/{codigo}` |
 | **Vagas** | Vagas afirmativas (Gupy, Adzuna, Transcidadania, TransEmpregos) com filtros de texto, cidade, modalidade e "só afirmativas". O detalhe mostra **por que a vaga é afirmativa** (o trecho do anúncio, `termo_afirmativo`) e o botão abre a candidatura **no site de origem** (`url_candidatura`). | FastAPI: `/api/vagas`, `/api/vagas/{id}` |
 | **Agenda** | Lembretes de hormônio (todo dia, dias da semana ou a cada N dias) e consultas com aviso antes. Notificação local no horário que a pessoa escolheu, "Marcar como feito" e histórico. **Nada sai do celular e o app não sugere dose.** | expo-sqlite + expo-notifications |
-| **Rodas** | Rodas de conversa presenciais e grupos de ONGs (sem chat próprio, como decidido no pitch). | API C#: `/api/rodas`, `/api/rodas/{id}` |
-| **Rolês** | Bares, baladas e espaços LGBT+ da curadoria, com "Aberto agora". | API C#: `/api/servicos?categoria=Role` |
+| **Rodas** (Conversa) | **Salas de conversa em tempo real**: primeiro emprego, transição, família e recém-chegades a SP. Só 18+, só apelido, sem conversa privada, moderadas por ONG. Segurar uma mensagem abre **denunciar** (1 toque; com 3 denúncias some) ou **bloquear** (só no seu celular). Abaixo, as rodas presenciais. | API C#: `/api/chat/...` e SignalR em `/hubs/chat`; `/api/rodas` |
+| **Rolês** | Bares, baladas e espaços LGBT+ da curadoria e do OpenStreetMap (tag `lgbtq`, importada pela API C#), com "Aberto agora" e **mapa**. | API C#: `/api/servicos?categoria=Role` · mapa OpenStreetMap |
 
-Em todo serviço: **Como chegar**, **Ligar** e **Abrir site** contam um toque no indicador de impacto (`POST /api/metricas/interacoes`, só tipo e id do serviço), e **Avisar que fechou** manda `POST /api/servicos/{id}/avisos-fechamento`.
+Casa e Rolês têm o botão **Mapa** (OpenStreetMap com Leaflet, sem chave; endereço protegido nunca entra no mapa). Em todo serviço: **Como chegar**, **Ligar** e **Abrir site** contam um toque no indicador de impacto (`POST /api/metricas/interacoes`, só tipo e id do serviço), e **Avisar que fechou** manda `POST /api/servicos/{id}/avisos-fechamento`.
 
 **Se uma API cair**, cada tela mostra o último dado guardado no celular com uma faixa "Sem conexão com o serviço agora. Você está vendo o que foi guardado hoje às 14h05". Se nunca houve dado guardado, a tela explica o que aconteceu e oferece "Tentar de novo". Nunca fica uma tela vazia sem explicação.
 
@@ -48,7 +48,7 @@ Em todo serviço: **Como chegar**, **Ligar** e **Abrir site** contam um toque no
 
 ## Como rodar
 
-Pré-requisitos: Node 20+, Android Studio com um emulador (ou um celular Android com depuração USB) e as duas APIs rodando.
+Pré-requisitos: Node 20+, Android Studio com um emulador (ou um celular Android com depuração USB) e as duas APIs rodando. A API C# precisa estar na versão com o chat (commit `63e4421` ou mais nova da branch `rinku/loving-planck-r47bz4`).
 
 1. Suba as APIs (cada uma no seu repositório):
 
@@ -108,7 +108,7 @@ npm test
 npm run typecheck
 ```
 
-95 testes Jest, sem rede: o `jest.setup.ts` faz qualquer `fetch` não preparado falhar. Os clientes das APIs são testados contra **respostas gravadas das APIs reais** em `__tests__/respostas` (06/11/2026, depois de sincronizar a FastAPI com a Gupy, o CNES e o IBGE).
+167 testes Jest, sem rede: o `jest.setup.ts` faz qualquer `fetch` não preparado falhar. Os clientes das APIs são testados contra **respostas gravadas das APIs reais** em `__tests__/respostas` (06/11/2026, depois de sincronizar a FastAPI com a Gupy, o CNES e o IBGE).
 
 | Arquivo | O que testa |
 |---|---|
@@ -117,26 +117,28 @@ npm run typecheck
 | `cache.test.ts` | dado novo é guardado; API fora mostra o guardado com a data; sem nada guardado dá erro explicado; 404 não usa versão velha |
 | `formato.test.ts` | "há 5 minutos", "amanhã às 08h30", distâncias, links de telefone e mapa, recusa de `javascript:` |
 | `config-pin-clima.test.ts` | escolha do endereço (env, emulador, celular físico, Ajustes), regras do PIN, previsão da tela de clima |
-| `contraste.test.ts` | todos os pares de cor dos dois temas passam de 4,5:1 |
+| `conversa.test.ts` | salas: juntar mensagens do tempo real, ocultar, bloquear por apelido, mesmas regras de link/telefone/e-mail/CPF da API, e o cliente do `/api/chat` contra respostas gravadas (regras, salas, entrar, 18+, enviar, 401, 422, denúncia) |
+| `contraste.test.ts` | todos os pares de cor dos dois temas e das seis abas passam de 4,5:1 |
 
 ## Telas
 
 | | | |
 |---|---|---|
-| ![Casa](docs/telas/casa.png) Casa | ![Serviço](docs/telas/servico.png) Detalhe com "como entrar" | ![Saúde](docs/telas/saude.png) Saúde e CNES |
-| ![Vagas](docs/telas/vagas.png) Vagas afirmativas | ![Vaga](docs/telas/vaga.png) Por que é afirmativa | ![Agenda](docs/telas/agenda.png) Agenda |
-| ![Lembrete](docs/telas/lembrete.png) Novo lembrete | ![Rodas](docs/telas/rodas.png) Rodas | ![Rolês](docs/telas/roles.png) Rolês |
-| ![Sem conexão](docs/telas/sem-conexao.png) API fora: dado guardado | ![Ajustes](docs/telas/ajustes.png) Ajustes | ![Clima](docs/telas/clima.png) Saída rápida |
+| ![Casa](docs/telas/casa.png) Casa, com vagas agora | ![Serviço](docs/telas/servico.png) Detalhe e "como entrar" | ![Saúde](docs/telas/saude.png) Saúde e CNES |
+| ![Vagas](docs/telas/vagas.png) Vagas afirmativas | ![Vaga](docs/telas/vaga.png) Por que é afirmativa | ![Sem conexão](docs/telas/sem-conexao.png) API fora: dado guardado |
+| ![Agenda](docs/telas/agenda.png) Agenda | ![Lembrete](docs/telas/lembrete.png) Novo lembrete | ![Rolês](docs/telas/roles.png) Rolês |
+| ![Conversa](docs/telas/rodas.png) Salas e rodas | ![Entrar](docs/telas/entrar-sala.png) Combinados, apelido e 18+ | ![Sala](docs/telas/sala.png) Sala ao vivo |
+| ![Denunciar](docs/telas/sala-denunciar.png) Denunciar ou bloquear | ![Ajustes](docs/telas/ajustes.png) Ajustes | ![Clima](docs/telas/clima.png) Saída rápida |
 
 ## Onde cada critério da rubrica aparece
 
 | Critério | Onde ver |
 |---|---|
 | **Telas e navegação** | Expo Router em `src/app`: `(abas)/_layout.tsx` com as 6 abas do pitch, um `Stack` em `_layout.tsx` com os detalhes (`servico/[id]`, `vaga/[id]`, `cnes/[codigo]`, `roda/[id]`), os formulários da agenda em modal, Ajustes e a tela de clima. Rotas tipadas (`typedRoutes`). |
-| **Consumo de dados** | `src/lib/api`: `http.ts` (fetch com tempo limite e ProblemDetails), `csharp.ts` e `soa.ts` com todos os endpoints pedidos, `tipos.ts` com os contratos das duas APIs. `src/estado/useRecurso.ts` mostra o guardado na hora, atualiza pela rede e avisa quando o dado é antigo. Endereços configuráveis em `src/lib/config.ts`. |
-| **Banco de dados** | `src/lib/banco.ts`: expo-sqlite com migração por `PRAGMA user_version`, tabelas `lembretes`, `registros`, `consultas`, `favoritos`, `preferencias` e `cache_api`, consultas parametrizadas e transação. O PIN fica como hash SHA-256 com sal no `expo-secure-store` (`src/lib/discreto.ts`). |
+| **Consumo de dados** | `src/lib/api`: `http.ts` (fetch com tempo limite, cabeçalhos e ProblemDetails), `csharp.ts`, `chat.ts` e `soa.ts` com todos os endpoints pedidos, `tipos.ts` com os contratos das duas APIs. Tempo real das salas com SignalR em `src/lib/tempoReal.ts` (com consulta de reserva se a conexão cair). `src/estado/useRecurso.ts` mostra o guardado na hora, atualiza pela rede e avisa quando o dado é antigo. Endereços configuráveis em `src/lib/config.ts`. |
+| **Banco de dados** | `src/lib/banco.ts`: expo-sqlite com migração por `PRAGMA user_version`, tabelas `lembretes`, `registros`, `consultas`, `favoritos`, `bloqueados`, `preferencias` e `cache_api`, consultas parametrizadas e transação. O PIN fica como hash SHA-256 com sal no `expo-secure-store` (`src/lib/discreto.ts`), e o token das salas também fica lá (`src/lib/participante.ts`). |
 | **Acessibilidade** | Rótulos e dicas de leitor de tela em todo botão e cartão (o cartão lê nome, distância, se está aberto e as vagas numa frase só), `accessibilityRole`, `accessibilityState` nos chips, regiões "live" para avisos e erros. Fonte Atkinson Hyperlegible que cresce com o tamanho do sistema, alvos de toque de 48 dp ou mais, teclado de PIN com teclas de 72 dp, contraste AA testado nos temas claro e escuro, linguagem simples. Ver `src/componentes/base.tsx` e `DESIGN.md`. |
-| **Aderência ao problema** | Cada serviço diz **como entrar** ("vá à sua UBS e peça encaminhamento"); endereço de casa de acolhimento é protegido; vagas mostram por que são afirmativas e mandam para o site de origem; agenda só no celular e sem sugerir dose; modo discreto com ícone "Clima", PIN e saída rápida; indicador de impacto anônimo. |
+| **Aderência ao problema** | Cada serviço diz **como entrar** ("vá à sua UBS e peça encaminhamento"); endereço de casa de acolhimento é protegido; vagas mostram por que são afirmativas e mandam para o site de origem; salas de conversa 18+ moderadas, sem conversa privada e sem troca de contato; agenda só no celular e sem sugerir dose; modo discreto com ícone "Clima", PIN e saída rápida; indicador de impacto anônimo. |
 | **Documentação** | Este README (ficha, como rodar, telas, rubrica, roteiro), `DESIGN.md` com a direção visual, comentários nos módulos explicando as decisões. |
 
 ## Organização
@@ -170,7 +172,8 @@ __tests__/                         testes e respostas gravadas
 - **Posição:** só quando a pessoa toca em "Perto de mim", vai na busca com 4 casas decimais e não é guardada.
 - **Métricas sem pessoa:** o app manda só o tipo do toque e o id do serviço.
 - **Links:** o app só abre `http(s)`, então um anúncio com `javascript:` não passa.
-- **Apagar meus dados** (Ajustes) apaga o banco, o PIN e as notificações agendadas.
+- **Salas:** só apelido. O token fica no armazenamento seguro; bloquear alguém fica só no seu celular. O app avisa antes de enviar link, telefone, e-mail ou CPF (a API recusa de qualquer jeito).
+- **Apagar meus dados** (Ajustes) apaga o banco, o PIN, o token das salas e as notificações agendadas.
 
 ## Roteiro do vídeo (3 min)
 
@@ -179,5 +182,6 @@ __tests__/                         testes e respostas gravadas
 3. **0:55–1:20** · Saúde: "Por onde começar" e as unidades habilitadas no SUS vindas do CNES pela FastAPI.
 4. **1:20–1:45** · Vagas: filtro "só afirmativas", abrir uma vaga, mostrar "Por que é afirmativa" e o botão que abre o site de origem.
 5. **1:45–2:15** · Agenda: criar um lembrete a cada 14 dias e mostrar a notificação chegando. Dizer que fica só no celular e o app não sugere dose.
-6. **2:15–2:35** · Derrubar a FastAPI e voltar em Vagas: aparece a faixa com o dado guardado e a hora.
-7. **2:35–3:00** · Modo discreto: ligar, mostrar o ícone "Clima" na tela inicial, criar PIN, tocar em "Sair" e voltar segurando o nome da cidade.
+6. **2:15–2:30** · Conversa: entrar numa sala com apelido, mandar uma mensagem e ver a de outra pessoa chegar ao vivo. Segurar e mostrar denunciar/bloquear.
+7. **2:30–2:45** · Derrubar a FastAPI e voltar em Vagas: aparece a faixa com o dado guardado e a hora.
+8. **2:45–3:00** · Modo discreto: ícone "Clima" na tela inicial, PIN, "Sair" e voltar segurando o nome da cidade.

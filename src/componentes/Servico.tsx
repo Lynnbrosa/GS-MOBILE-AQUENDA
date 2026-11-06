@@ -48,7 +48,7 @@ export const ServicoItem = memo(function ServicoItem({ servico, vagas }: { servi
       titulo={servico.nome}
       apoio={onde}
       direita={distancia(servico.distanciaKm)}
-      marca={servico.abertoAgora === true ? cor.ok : servico.abertoAgora === false ? cor.linha : undefined}
+      marca={servico.abertoAgora === true ? cor.ok : servico.abertoAgora === false ? cor.linha : ''}
       rotulo={partesFaladas.filter(Boolean).join('. ')}
       dica="Abre os detalhes e como entrar"
       onPress={() => router.push({ pathname: '/servico/[id]', params: { id: String(servico.id) } })}

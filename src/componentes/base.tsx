@@ -226,7 +226,7 @@ export function Linha({
   onPress: () => void;
   rotulo?: string;
   dica?: string;
-  /** bolinha colorida à esquerda (ex.: aberto agora) */
+  /** bolinha colorida à esquerda (ex.: aberto agora). String vazia reserva o espaço sem cor. */
   marca?: string;
 }) {
   const { cor } = useTema();
@@ -238,7 +238,7 @@ export function Linha({
       onPress={onPress}
       style={({ pressed }) => [est.linha, { opacity: pressed ? 0.6 : 1 }]}
     >
-      {marca ? <View style={[est.marca, { backgroundColor: marca }]} /> : null}
+      {marca !== undefined ? <View style={[est.marca, { backgroundColor: marca || 'transparent' }]} /> : null}
       <View style={{ flex: 1, gap: 3 }}>
         <Texto v="forte">{titulo}</Texto>
         {apoio ? (

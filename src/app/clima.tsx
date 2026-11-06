@@ -4,13 +4,17 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useEffect, useMemo } from 'react';
-import { BackHandler, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Texto, type NomeIcone } from '@/componentes/base';
 import { useSessao } from '@/estado/Sessao';
 import { DIAS_CURTOS } from '@/lib/agenda';
 import { previsaoDoDia } from '@/lib/clima';
 import { espaco } from '@/tema/tokens';
+
+// fonte do sistema, como num app de clima comum (a do Aquenda entregaria o disfarce)
+const SISTEMA = { fontFamily: Platform.OS === 'android' ? 'sans-serif' : 'System' };
+const SISTEMA_FORTE = { fontFamily: Platform.OS === 'android' ? 'sans-serif-medium' : 'System', fontWeight: '600' as const };
 
 const CEU = { fundo: '#2F6CA3', cartao: 'rgba(255,255,255,0.16)', texto: '#FFFFFF', suave: '#E3EEF8' };
 
@@ -46,33 +50,33 @@ export default function Clima() {
       <ScrollView contentContainerStyle={{ padding: espaco.xl, gap: espaco.xl }}>
         <View style={{ alignItems: 'center', gap: espaco.xs, paddingTop: espaco.xl }}>
           <Pressable onLongPress={entrar} delayLongPress={700} accessibilityRole="text" accessibilityLabel="São Paulo">
-            <Texto v="subtitulo" cor={CEU.texto}>
+            <Texto v="subtitulo" style={SISTEMA_FORTE} cor={CEU.texto}>
               São Paulo
             </Texto>
           </Pressable>
-          <Texto cor={CEU.texto} style={{ fontSize: 88, lineHeight: 96 }} maxFontSizeMultiplier={1.2}>
+          <Texto cor={CEU.texto} style={[SISTEMA, { fontSize: 88, lineHeight: 96, fontWeight: '200' }]} maxFontSizeMultiplier={1.2}>
             {hoje.agora}°
           </Texto>
-          <Texto v="forte" cor={CEU.suave}>
+          <Texto v="forte" style={SISTEMA_FORTE} cor={CEU.suave}>
             {hoje.descricao}
           </Texto>
-          <Texto cor={CEU.suave}>
+          <Texto cor={CEU.suave} style={SISTEMA}>
             Máx. {hoje.max}° Mín. {hoje.min}°
           </Texto>
         </View>
 
         <View style={[s.cartao, { backgroundColor: CEU.cartao }]}>
-          <Texto v="apoioForte" cor={CEU.suave}>
+          <Texto v="apoioForte" style={SISTEMA_FORTE} cor={CEU.suave}>
             Próximas horas
           </Texto>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             {hoje.horas.map((h) => (
               <View key={h.hora} style={{ alignItems: 'center', gap: 6 }}>
-                <Texto v="apoio" cor={CEU.suave}>
+                <Texto v="apoio" cor={CEU.suave} style={SISTEMA}>
                   {String(h.hora).padStart(2, '0')}h
                 </Texto>
                 <Ionicons name={ICONES[h.ceu]} size={24} color={CEU.texto} />
-                <Texto v="forte" cor={CEU.texto}>
+                <Texto v="forte" style={SISTEMA_FORTE} cor={CEU.texto}>
                   {h.temp}°
                 </Texto>
               </View>
@@ -81,19 +85,19 @@ export default function Clima() {
         </View>
 
         <View style={[s.cartao, { backgroundColor: CEU.cartao }]}>
-          <Texto v="apoioForte" cor={CEU.suave}>
+          <Texto v="apoioForte" style={SISTEMA_FORTE} cor={CEU.suave}>
             Próximos 7 dias
           </Texto>
           {dias.map((d, i) => (
             <View key={i} style={s.dia}>
-              <Texto v="forte" cor={CEU.texto} style={{ width: 64 }}>
+              <Texto v="forte" cor={CEU.texto} style={[SISTEMA_FORTE, { width: 64 }]}>
                 {i === 0 ? 'Hoje' : DIAS_CURTOS[d.data.getDay()]}
               </Texto>
               <Ionicons name={ICONES[d.ceu]} size={24} color={CEU.texto} />
-              <Texto cor={CEU.suave} style={{ width: 52, textAlign: 'right' }}>
+              <Texto cor={CEU.suave} style={[SISTEMA, { width: 52, textAlign: 'right' }]}>
                 {d.chuva}%
               </Texto>
-              <Texto cor={CEU.texto} style={{ flex: 1, textAlign: 'right' }}>
+              <Texto cor={CEU.texto} style={[SISTEMA, { flex: 1, textAlign: 'right' }]}>
                 {d.min}° / {d.max}°
               </Texto>
             </View>
