@@ -123,10 +123,11 @@ describe('cliente das salas (respostas gravadas da API C#)', () => {
     await expect(apiChat.enviar('', 2, 'oi')).rejects.toMatchObject({ status: 401 });
   });
 
-  it('lê as mensagens da sala', async () => {
-    prepararFetch({ '/mensagens': [200, 'chat-mensagens.json'] });
-    const ms = await apiChat.mensagens(2);
+  it('lê as mensagens da sala mandando o token de participante', async () => {
+    const pedidas = prepararFetch({ '/mensagens': [200, 'chat-mensagens.json'] });
+    const ms = await apiChat.mensagens('tok', 2);
     expect(ms.map((x) => x.texto)).toContain('Oi! Alguém já fez a retificação pela Defensoria?');
+    expect((pedidas[0].init!.headers as Record<string, string>)[CABECALHO_TOKEN]).toBe('tok');
   });
 
   it('denúncia em 1 toque, sem corpo, devolve a contagem', async () => {

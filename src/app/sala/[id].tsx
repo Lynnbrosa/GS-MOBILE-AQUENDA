@@ -88,9 +88,11 @@ export default function SalaConversa() {
   }, [salaId, nome, chaveCache]);
 
   /** Busca as últimas 50 e junta com o que já está na tela. */
+  const token = eu?.token;
   const buscar = useCallback(async (): Promise<number> => {
+    if (!token) return 0;
     try {
-      const recentes = await apiChat.mensagens(salaId);
+      const recentes = await apiChat.mensagens(token, salaId);
       let novas = 0;
       setMensagens((atuais) => {
         const conhecidas = new Set(atuais.map((m) => m.id));
@@ -105,7 +107,11 @@ export default function SalaConversa() {
       setSemConexaoDesde(null);
       return novas;
     } catch (e) {
-      if (e instanceof ErroApi && e.indisponivel) {
+      if (e instanceof ErroApi && e.status === 401) {
+        // o servidor não reconhece mais o token (saiu ou foi apagado): entra de novo
+        await esquecerParticipante();
+        router.replace({ pathname: '/salas/entrar', params: { sala: String(salaId), nome: nome ?? '' } });
+      } else if (e instanceof ErroApi && e.indisponivel) {
         const g = await armazemSqlite.ler(chaveCache).catch(() => null);
         setSemConexaoDesde((atual) => atual ?? g?.guardadoEm ?? new Date().toISOString());
       }
@@ -113,16 +119,17 @@ export default function SalaConversa() {
     } finally {
       setCarregando(false);
     }
-  }, [salaId, chaveCache, guardar]);
+  }, [token, salaId, nome, chaveCache, guardar]);
 
   // tempo real pelo SignalR; se cair, consulta de tempos em tempos até voltar
   useFocusEffect(
     useCallback(() => {
+      if (!token) return undefined;
       let vivo = true;
       let quietas = 0;
       let timer: ReturnType<typeof setTimeout>;
       buscar();
-      const conexao = conectarSala(salaId, {
+      const conexao = conectarSala(salaId, token, {
         onMensagem: (m) =>
           setMensagens((atuais) => {
             const juntas = mesclar(atuais, [m]);
@@ -150,7 +157,7 @@ export default function SalaConversa() {
         clearTimeout(timer);
         conexao.parar();
       };
-    }, [buscar, salaId, guardar]),
+    }, [buscar, token, salaId, guardar]),
   );
 
   const visiveis = useMemo(() => semBloqueados(mensagens, bloqueados), [mensagens, bloqueados]);

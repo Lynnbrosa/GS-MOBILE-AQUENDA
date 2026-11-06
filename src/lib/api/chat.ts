@@ -21,8 +21,10 @@ export const apiChat = {
 
   salas: () => pedirJson<Sala[]>(`${base()}/salas`),
 
-  /** As últimas mensagens visíveis (ou as anteriores a `antesDe`), da mais antiga para a mais nova. */
-  mensagens: (salaId: number, antesDe?: number | null) => pedirJson<Mensagem[]>(urlMensagens(salaId, antesDe)),
+  /** As últimas mensagens visíveis (ou as anteriores a `antesDe`), da mais antiga para a mais nova.
+   * Só quem entrou nas salas lê: a API pede o token, porque as conversas falam de saúde e transição. */
+  mensagens: (token: string, salaId: number, antesDe?: number | null) =>
+    pedirJson<Mensagem[]>(urlMensagens(salaId, antesDe), { cabecalhos: { [CABECALHO_TOKEN]: token } }),
 
   entrar: (apelido: string) =>
     pedirJson<Entrada>(`${base()}/participantes`, {
