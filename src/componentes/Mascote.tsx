@@ -1,7 +1,6 @@
-// A marca do Aquenda: um elefante que é a letra "a". A tromba faz a voltinha de cima,
-// a pele tem a textura da casca do kiwi e a orelha mostra a polpa verde.
-// O desenho original é vetorial (scripts/logo/logo.js); aqui entra a versão já rasterizada,
-// porque a textura usa filtros SVG que o react-native-svg não desenha.
+// A marca do Aquenda: um elefantinho com a pele de casca de kiwi e a orelha de kiwi cortado,
+// que levanta a tromba e faz a letra "a" com um arco-íris pastel.
+// assets/mascote.png sai de assets/logo-original.png (scripts/logo/recortar.py).
 import { Image } from 'react-native';
 
 const IMAGEM = require('../../assets/mascote.png');

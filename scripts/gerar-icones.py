@@ -1,7 +1,7 @@
 """Gera os ícones do app em assets/ (rode com: python scripts/gerar-icones.py).
 
 Gera só o ícone "Clima" do modo discreto (sol e nuvem sobre azul-céu).
-O ícone do Aquenda vem de scripts/logo/logo.js.
+O ícone do Aquenda vem da logo (scripts/logo/recortar.py).
 """
 from pathlib import Path
 
@@ -142,7 +142,7 @@ def salvar(img: Image.Image, nome: str, tamanho: int = LADO) -> None:
 
 
 def main() -> None:
-    """Só o ícone do modo discreto. O do Aquenda sai de scripts/logo/logo.js (SVG com textura)."""
+    """Só o ícone do modo discreto. O do Aquenda sai de scripts/logo/recortar.py."""
     ASSETS.mkdir(exist_ok=True)
 
     clima = novo(CEU)

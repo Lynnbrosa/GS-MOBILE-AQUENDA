@@ -1,5 +1,7 @@
 # Aquenda · App mobile (Mobile Development & IoT)
 
+<img src="assets/logo.png" alt="Logo do Aquenda: elefante de kiwi fazendo a letra a com a tromba de arco-íris" width="160"/>
+
 App do **Aquenda**, a CitizenTech do grupo na Global Solution FIAP 2026.2 (Engenharia de Software, 3º ano).
 Esta é a entrega de **Mobile Development & IoT**: o app em React Native + TypeScript + Expo que é a porta de entrada da solução. Ele consome as duas APIs do grupo, guarda a agenda de hormônio e consultas só no celular e tem modo discreto.
 
@@ -82,6 +84,14 @@ powershell -ExecutionPolicy Bypass -File scripts/build-android-local.ps1
 
 Com `-Release`, gera um APK que roda sozinho (sem o Metro) em `dist-apk/`.
 
+Se o app abrir com a tela preta e o log mostrar `ProtocolException` ao baixar o bundle, a rede do Windows está cortando a conexão do emulador com o Metro em `10.0.2.2`. Passe pelo túnel do adb:
+
+```bash
+adb reverse tcp:8081 tcp:8081
+```
+
+e, no app, abra o menu de desenvolvimento (Ctrl+M no emulador) → *Change bundle location* → `localhost:8081`.
+
 ### Endereço das APIs
 
 | Onde | O que o app usa sem configurar nada |
@@ -162,7 +172,8 @@ src/
     formato.ts clima.ts config.ts localizacao.ts
   tema/                  tokens de cor, tipo e espaço
 plugins/with-rotulo-discreto.js   nome "Clima" junto com o ícone no Android
-scripts/gerar-icones.py           gera os ícones de assets/
+scripts/logo/recortar.py          tira o fundo da logo e gera os ícones de assets/
+scripts/gerar-icones.py           gera o ícone "Clima" do modo discreto
 __tests__/                         testes e respostas gravadas
 ```
 

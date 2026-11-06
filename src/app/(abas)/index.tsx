@@ -42,7 +42,7 @@ export default function Casa() {
       secao="casa"
       topo={
         <View accessible accessibilityLabel="Aquenda">
-          <Mascote tamanho={72} />
+          <Mascote tamanho={92} />
         </View>
       }
       titulo="Do que você precisa?"

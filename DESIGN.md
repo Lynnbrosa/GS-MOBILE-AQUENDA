@@ -1,6 +1,8 @@
 # Aquenda: direção visual
 
-Tudo sai da logo: um elefantinho com a pele de casca de kiwi, a orelha de kiwi cortado e a tromba de arco-íris pastel desenhando a letra "a". O app tem o mesmo jeito: ilustração de livro infantil, acolhedor, com pouco texto. As referências que guiaram o resto foram o Headspace (uma cor forte por seção, título curto, uma ação por tela) e o Finch (formas macias, autocuidado sem pressa). Os tokens estão em `src/tema/tokens.ts`.
+![Logo do Aquenda](assets/logo.png)
+
+Tudo sai da logo: um elefantinho com a pele de casca de kiwi e a orelha de kiwi cortado, que levanta a tromba e desenha a letra "a" com um arco-íris pastel. A arte original está em `assets/logo-original.png`; `scripts/logo/recortar.py` tira o fundo e gera o ícone, o ícone adaptativo e monocromático do Android, a abertura e o mascote usado dentro do app. O app tem o mesmo jeito: ilustração de livro infantil, acolhedor, com pouco texto. As referências que guiaram o resto foram o Headspace (uma cor forte por seção, título curto, uma ação por tela) e o Finch (formas macias, autocuidado sem pressa). Os tokens estão em `src/tema/tokens.ts`.
 
 ## Cor
 
