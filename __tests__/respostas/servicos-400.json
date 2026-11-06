@@ -1,0 +1,1 @@
+{"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"Parâmetro inválido","status":400,"detail":"Raio só funciona com latitude e longitude."}
