@@ -196,3 +196,28 @@ export function conteudoConsulta(c: Pick<Consulta, 'titulo' | 'local' | 'dataHor
   const quando = `${DIAS_CURTOS[d.getDay()]}, ${dois(d.getDate())}/${dois(d.getMonth() + 1)} às ${horaTexto(d.getHours(), d.getMinutes())}`;
   return { titulo: c.titulo.trim(), corpo: c.local.trim() ? `${quando}, ${c.local.trim()}` : quando };
 }
+
+// ---------- datas digitadas ----------
+
+/** "14/11/2026" -> "2026-11-14". Aceita "14/11" (ano atual). Devolve null se não for uma data real. */
+export function dataBrParaIso(texto: string, agora: Date = new Date()): string | null {
+  const r = /^\s*(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?\s*$/.exec(texto);
+  if (!r) return null;
+  const iso = `${r[3] ?? agora.getFullYear()}-${dois(Number(r[2]))}-${dois(Number(r[1]))}`;
+  return lerDataIso(iso) ? iso : null;
+}
+
+export function isoParaBr(iso: string): string {
+  const d = lerDataIso(iso);
+  return d ? `${dois(d.d)}/${dois(d.m)}/${d.a}` : iso;
+}
+
+/** "20:30", "20h30", "8" -> { hora: 20, minuto: 30 }. */
+export function lerHorario(texto: string): { hora: number; minuto: number } | null {
+  const r = /^\s*(\d{1,2})(?:\s*[:hH]\s*(\d{1,2})?)?\s*$/.exec(texto);
+  if (!r) return null;
+  const hora = Number(r[1]);
+  const minuto = r[2] ? Number(r[2]) : 0;
+  if (hora > 23 || minuto > 59) return null;
+  return { hora, minuto };
+}

@@ -50,7 +50,7 @@ export default function LayoutAbas() {
                   <View style={{ flex: 1, backgroundColor: cor.fitaAzul }} />
                   <View style={{ flex: 1, backgroundColor: cor.fitaRosa }} />
                 </View>
-                <Ionicons name={focused ? a.iconeAtivo : a.icone} size={24} color={color} />
+                <Ionicons name={focused ? a.iconeAtivo : a.icone} size={24} color={String(color)} />
               </View>
             ),
           }}
